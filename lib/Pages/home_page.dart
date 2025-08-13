@@ -111,7 +111,8 @@ class _HomePageState extends State<HomePage> {
                         //return as a list tile
                         return MyListTile(
                             title: message,
-                            subTitle: userEmail
+                            subTitle: userEmail,
+                            timestamp : timestamp
                         );
                       },
                   ),
