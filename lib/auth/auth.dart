@@ -13,6 +13,18 @@ class AuthPage extends StatelessWidget {
       body: StreamBuilder(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot){
+
+            // Show loading while checking auth state
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            // Add debug print to see what's happening
+            print('Auth state: ${snapshot.hasData ? 'Logged in' : 'Logged out'}');
+            print('User: ${snapshot.data?.email ?? 'No user'}');
+
             //user is logged in
             if (snapshot.hasData){
               return HomePage();

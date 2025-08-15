@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
 
                 const Text(
 
-                  "M I N I M A L",
+                  "F E L L O",
                   style: TextStyle(fontSize: 20),
                 ),
 

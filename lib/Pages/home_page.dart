@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:social_app/components/my_drawer.dart';
 import 'package:social_app/components/my_list_tile.dart';
@@ -40,11 +39,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
-        title: Text("W A L L"),
+        title: Text("F E L L O"),
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 0,
       ),
+
+      //drawer
       drawer: const MyDrawer(),
       body: Column(
         children: [
