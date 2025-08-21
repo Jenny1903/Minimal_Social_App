@@ -123,7 +123,7 @@ class _LoadingPageState extends State<LoadingPage>
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                       letterSpacing: 4.8,
-                      fontFamily: 'System', // Use system font
+                      // fontFamily: 'System', // Use system font
                     ),
                   ),
                 ),

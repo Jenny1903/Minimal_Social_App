@@ -14,7 +14,7 @@ class HomePage extends StatefulWidget {
 }
 class _HomePageState extends State<HomePage> {
 
-  //firestore access
+  //firestore accessch
   final FirestoreDatabase database = FirestoreDatabase();
 
 
