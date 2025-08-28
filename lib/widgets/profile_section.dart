@@ -17,7 +17,7 @@ class ProfileSection extends StatelessWidget {
       child: Column(
         children: [
           Row(
-            children: [
+            children:  [
               Container(
                 width: 60,
                 height: 60,
