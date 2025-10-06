@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:social_app/widgets/custom_app_bar.dart';
 import 'package:social_app/widgets/profile_section.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+
+import '../widgets/custom_bottom_nav.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
