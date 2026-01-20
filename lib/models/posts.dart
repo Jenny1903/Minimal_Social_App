@@ -9,11 +9,12 @@ class Post {
   final PostType type;
   final String? imageUrl;
   final String? quoteText;
+  final String? quoteAuthor;
   final DateTime createdAt;
   final int likesCount;
   final int commentsCount;
   final int sharesCount;
-  final bool inLiked;
+  final bool isLiked;
 
   Post({
 
@@ -23,10 +24,11 @@ class Post {
     required this.type,
     this.imageUrl,
     this.quoteText,
+    this.quoteAuthor,
     required this.createdAt,
     required this.likesCount,
     required this.commentsCount,
     this.sharesCount = 0,
-    this.inLiked = false,
+    this.isLiked = false,
 });
 }

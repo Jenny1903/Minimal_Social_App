@@ -5,7 +5,7 @@ import 'post_widget.dart';
 class FeedSection extends StatelessWidget {
   final List<Post> posts;
 
-  const FeedSection({super.key, required this.posts}) : super(key: key);
+  const FeedSection({super.key, required this.posts});
 
   @override
   Widget build(BuildContext context) {
