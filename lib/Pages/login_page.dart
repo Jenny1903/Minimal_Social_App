@@ -13,125 +13,151 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
   //text collectors
- final TextEditingController emailController = TextEditingController();
- final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
- //login method
- void login() async {
-   showDialog(context: context,
-       builder: (context) => const Center(
-         child: CircularProgressIndicator(),
-       ),
-   );
+  //login method
+  void login() async {
+    showDialog(
+      context: context,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
 
-   //try sign in
-   try{
-     await FirebaseAuth.instance.signInWithEmailAndPassword(email: emailController.text, password: passwordController.text);
+    //try sign in
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text, password: passwordController.text);
 
-     //pop loading circle
-     if(context.mounted) Navigator.pop(context);
-   }
-   
-   //display any error
-   on FirebaseAuthException catch (e) {
-    
-     //pop loading circle
-     Navigator.pop(context);
-     displayMessageToUser(e.code, context);
-     
-   }
+      //pop loading circle
+      if (context.mounted) Navigator.pop(context);
+    }
 
- }
+    //display any error
+    on FirebaseAuthException catch (e) {
+      //pop loading circle
+      Navigator.pop(context);
+      displayMessageToUser(e.code, context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(25.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: Column(
               children: [
-                //logo
-                Icon(
-                  Icons.person,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.inversePrimary,
+                const SizedBox(height: 40),
+
+                //illustration at the top
+                Container(
+                  height: 200,
+                  child: Image.asset(
+                    'assets/images/love.png',
+                    fit: BoxFit.contain,
+                  ),
                 ),
 
-               const SizedBox(height: 35),
+                const SizedBox(height: 30),
 
+                //app name/logo
                 const Text(
-
                   "F E L L O",
-                  style: TextStyle(fontSize: 20),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 2,
+                  ),
                 ),
 
-                const SizedBox(height:50),
+                const SizedBox(height: 10),
+
+                //tagline
+                Text(
+                  "Welcome back!",
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
                 //email textField
                 MyTextfield(
-                    hintText: "Email",
-                    obscureText: false,
-                    controller: emailController,
+                  hintText: "Email",
+                  obscureText: false,
+                  controller: emailController,
                 ),
 
-                const SizedBox(height:10),
+                const SizedBox(height: 15),
 
                 //password textfield
                 MyTextfield(
-                    hintText: "Password",
-                    obscureText: true,
-                    controller: passwordController,
+                  hintText: "Password",
+                  obscureText: true,
+                  controller: passwordController,
                 ),
-                const SizedBox(height:10),
+
+                const SizedBox(height: 10),
 
                 //forgot password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                   Text(
-                     "Forgot Passoword?",
-                   style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary),
-                    ), //text
-                  ],
-                ),
-
-                const SizedBox(height:10),
-          // sign in here
-                MyButton(
-                    text: "Login",
-                    onTap: login,
-                ),
-
-                const SizedBox(height:10),
-                //don't have an account ? Register here
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
                     Text(
-                    "Don't have an account? " ,
-                        style: TextStyle(
-                        color: Theme.of(context).colorScheme.secondary),
-                        ),
-                    GestureDetector(
-                      onTap: widget.onTap,
-                      child: Text(
-                          "Register Here",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      "Forgot Password?",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 25),
+
+                //sign in button
+                MyButton(
+                  text: "Login",
+                  onTap: login,
+                ),
+
+                const SizedBox(height: 30),
+
+                //don't have an account? Register here
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: widget.onTap,
+                      child: const Text(
+                        "Register Here",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
               ],
+            ),
           ),
-        )
-      )
+        ),
+      ),
     );
   }
 }
