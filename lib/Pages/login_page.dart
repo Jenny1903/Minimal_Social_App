@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                 Text(
                   "Welcome back!",
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),

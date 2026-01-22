@@ -12,7 +12,7 @@ class MyDrawer extends StatelessWidget {
       await Future.delayed(Duration(milliseconds: 100));
       print('Firebase signOut completed');
 
-      // Navigate back to auth flow and clear all previous routes
+      //navigate back to auth flow and clear all previous routes
       if (context.mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
           '/login_register_page',
@@ -20,7 +20,7 @@ class MyDrawer extends StatelessWidget {
         );
       }
     } catch (e) {
-      // Handle any logout errors
+      //handle any logout errors
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error logging out: $e')),
@@ -36,7 +36,7 @@ class MyDrawer extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Top section with header and menu items
+          //top section with header and menu items
           Column(
             children: [
               // Drawer header
@@ -49,7 +49,7 @@ class MyDrawer extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              // Home title
+              //home title
               Padding(
                 padding: const EdgeInsets.only(left: 25.0),
                 child: ListTile(
@@ -64,7 +64,7 @@ class MyDrawer extends StatelessWidget {
                 ),
               ),
 
-              // Profile title
+              //profile title
               Padding(
                 padding: const EdgeInsets.only(left: 25.0),
                 child: ListTile(
@@ -80,7 +80,7 @@ class MyDrawer extends StatelessWidget {
                 ),
               ),
 
-              // Users title
+              //users title
               Padding(
                 padding: const EdgeInsets.only(left: 25.0),
                 child: ListTile(
@@ -98,7 +98,7 @@ class MyDrawer extends StatelessWidget {
             ],
           ),
 
-          // Bottom section with logout
+          //bottom section with logout
           Padding(
             padding: const EdgeInsets.only(left: 25.0, bottom: 25),
             child: ListTile(

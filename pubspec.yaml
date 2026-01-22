@@ -33,5 +33,6 @@ flutter:
 
   assets:
     - assets/images/love.png
+    - assets/lottie/liking.json
 
 

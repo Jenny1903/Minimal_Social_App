@@ -1,130 +1,161 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class MyListTile extends StatelessWidget {
   final String title;
   final String subTitle;
-  final Timestamp? timestamp;
+  final Timestamp timestamp;
 
   const MyListTile({
     super.key,
     required this.title,
     required this.subTitle,
-    this.timestamp,
+    required this.timestamp,
   });
-
-// Function to format timestamp
-String formatTimestamp(Timestamp timestamp) {
-  DateTime dateTime = timestamp.toDate();
-
-  // Format time as "12:40 PM"
-  String time = DateFormat('h:mm a').format(dateTime);
-
-  // Format date as "Dec 25, 2023"
-  String date = DateFormat('MMM d, y').format(dateTime);
-
-  return "$date • $time";
-}
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.only(left: 20.0 , right: 20 , bottom: 10),
-        child: Container(
-          decoration : BoxDecoration(color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // User info row
+          Row(
+            children: [
+              // Avatar
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                child: Icon(
+                  Icons.person,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.inversePrimary,
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              //user email and time
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      subTitle,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatTime(timestamp),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              //more options
+              Icon(
+                Icons.more_horiz,
+                color: Theme.of(context).colorScheme.secondary,
+                size: 20,
+              ),
+            ],
           ),
 
-          child: ListTile(
-            title: Text(title),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subTitle,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                ),
-                if (timestamp != null)
-                  Text(
-                    formatTimestamp(timestamp!),// Convert timestamp to readable format
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontSize: 12,
-                    ),
-                  ),
-              ],
+          const SizedBox(height: 12),
+
+          //post message
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.4,
+              color: Theme.of(context).colorScheme.inversePrimary,
             ),
           ),
-        )
+
+          const SizedBox(height: 12),
+
+          //action buttons
+          Row(
+            children: [
+              _buildActionButton(
+                context,
+                Icons.favorite_border,
+                "Like",
+              ),
+              const SizedBox(width: 20),
+              _buildActionButton(
+                context,
+                Icons.chat_bubble_outline,
+                "Comment",
+              ),
+              const SizedBox(width: 20),
+              _buildActionButton(
+                context,
+                Icons.share_outlined,
+                "Share",
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
-}
 
-//
-// import 'package:flutter/material.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:intl/intl.dart';
-//
-// class MyListTile extends StatelessWidget {
-//   final String title;
-//   final String subTitle;
-//   final Timestamp? timestamp; // Add this
-//
-//   const MyListTile({
-//     super.key,
-//     required this.title,
-//     required this.subTitle,
-//     this.timestamp, // Add this
-//   });
-//
-//   // Function to format timestamp
-//   String formatTimestamp(Timestamp timestamp) {
-//     DateTime dateTime = timestamp.toDate();
-//
-//     // Format time as "12:40 PM"
-//     String time = DateFormat('h:mm a').format(dateTime);
-//
-//     // Format date as "Dec 25, 2023"
-//     String date = DateFormat('MMM d, y').format(dateTime);
-//
-//     return "$date • $time";
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//         padding: const EdgeInsets.only(left: 20.0 , right: 20 , bottom: 10),
-//         child: Container(
-//           decoration : BoxDecoration(
-//             color: Theme.of(context).colorScheme.primary,
-//             borderRadius: BorderRadius.circular(12),
-//           ),
-//           child: ListTile(
-//             title: Text(title),
-//             subtitle: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Text(
-//                   subTitle,
-//                   style: TextStyle(
-//                     color: Theme.of(context).colorScheme.secondary,
-//                   ),
-//                 ),
-//                 if (timestamp != null)
-//                   Text(
-//                     formatTimestamp(timestamp!),// Convert timestamp to readable format
-//                     style: TextStyle(
-//                       color: Theme.of(context).colorScheme.secondary,
-//                       fontSize: 12,
-//                     ),
-//                   ),
-//               ],
-//             ),
-//           ),
-//         )
-//     );
-//   }
-// }
+  Widget _buildActionButton(BuildContext context, IconData icon, String label) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTime(Timestamp timestamp) {
+    DateTime dateTime = timestamp.toDate();
+    DateTime now = DateTime.now();
+    Duration difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+}

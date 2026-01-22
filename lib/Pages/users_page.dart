@@ -12,7 +12,6 @@ class UsersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
 
-
       backgroundColor: Theme.of(context).colorScheme.background,
       body: StreamBuilder(
           stream: FirebaseFirestore.instance.collection("Users").snapshots(),
