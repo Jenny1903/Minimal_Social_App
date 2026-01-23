@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 class MyListTile extends StatelessWidget {
   final String title;
   final String subTitle;
-  final Timestamp timestamp;
+  final Timestamp? timestamp;
 
   const MyListTile({
     super.key,
     required this.title,
     required this.subTitle,
-    required this.timestamp,
+    this.timestamp,
   });
 
   @override
@@ -61,14 +61,17 @@ class MyListTile extends StatelessWidget {
                         color: Theme.of(context).colorScheme.inversePrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatTime(timestamp),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.secondary,
+                    if (timestamp != null) ...[
+                      const SizedBox(height: 2),
+
+                      Text(
+                        _formatTime(timestamp!),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -99,23 +102,11 @@ class MyListTile extends StatelessWidget {
           //action buttons
           Row(
             children: [
-              _buildActionButton(
-                context,
-                Icons.favorite_border,
-                "Like",
-              ),
+              _buildActionButton(context, Icons.favorite_border, "Like"),
               const SizedBox(width: 20),
-              _buildActionButton(
-                context,
-                Icons.chat_bubble_outline,
-                "Comment",
-              ),
+              _buildActionButton(context, Icons.chat_bubble_outline, "Comment"),
               const SizedBox(width: 20),
-              _buildActionButton(
-                context,
-                Icons.share_outlined,
-                "Share",
-              ),
+              _buildActionButton(context, Icons.share_outlined, "Share"),
             ],
           ),
         ],
@@ -126,11 +117,7 @@ class MyListTile extends StatelessWidget {
   Widget _buildActionButton(BuildContext context, IconData icon, String label) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: Theme.of(context).colorScheme.secondary,
-        ),
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.secondary),
         const SizedBox(width: 4),
         Text(
           label,
