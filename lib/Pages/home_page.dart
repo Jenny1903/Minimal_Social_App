@@ -55,7 +55,7 @@ class _HomePageState extends State<HomePage> {
               opacity: 0.1, // Adjust opacity as needed
               child: Lottie.asset(
                 'assets/lottie/liking.json',
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
               ),
             ),
           ),
