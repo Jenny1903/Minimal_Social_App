@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/Pages/home_page.dart';
 import 'package:social_app/Pages/profile_page.dart';
 import 'package:social_app/Pages/users_page.dart';
@@ -12,38 +13,41 @@ import 'package:social_app/auth/login_or_register.dart';
 import 'package:social_app/components/my_drawer.dart';
 import 'package:social_app/Pages/loading_page.dart';
 
-
-
-void main( ) async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   final user = FirebaseAuth.instance.currentUser;
   print('App starting - Current user: ${user?.email ?? 'No user'}');
-  runApp(const MyApp());
+
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget{
-
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    return  MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // home: const AuthPage(),
+
       home: const LoadingPage(),
+
       theme: lightMode,
       darkTheme: darkMode,
+
       routes: {
         '/loading': (context) => const LoadingPage(),
         '/auth': (context) => const AuthPage(),
-        '/login_register_page':(context) => const LoginOrRegister(),
+        '/login_register_page': (context) => const LoginOrRegister(),
         '/home_page': (context) => HomePage(),
-        '/profile_page': (context) =>  ProfilePage(),
-        '/user_page': (context)=> const UsersPage(),
+        '/profile_page': (context) => ProfilePage(),
+        '/user_page': (context) => const UsersPage(),
       },
     );
   }
-
 }

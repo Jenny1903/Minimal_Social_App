@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
           // Lottie background for entire screen
           Positioned.fill(
             child: Opacity(
-              opacity: 0.1, // Adjust opacity as needed
+              opacity: 0.6, // Adjust opacity as needed
               child: Lottie.asset(
                 'assets/lottie/liking.json',
                 fit: BoxFit.contain,
