@@ -13,7 +13,6 @@ import 'package:social_app/auth/login_or_register.dart';
 import 'package:social_app/components/my_drawer.dart';
 import 'package:social_app/Pages/loading_page.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);

@@ -5,11 +5,11 @@ import 'package:social_app/providers/auth_provider.dart';
 import '../Pages/home_page.dart';
 
 
-class AuthPage extends ConsumerWidget {  // 👈 Changed from StatelessWidget
+class AuthPage extends ConsumerWidget {
   const AuthPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {  // 👈 Added WidgetRef ref
+  Widget build(BuildContext context, WidgetRef ref) {
 
 
     final authState = ref.watch(authStateProvider);
