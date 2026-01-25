@@ -1,16 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:social_app/auth/auth.dart';
-import 'home_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LoadingPage extends StatefulWidget {
+class LoadingPage extends ConsumerStatefulWidget {
   const LoadingPage({Key? key}) : super(key: key);
 
   @override
-  State<LoadingPage> createState() => _LoadingPageState();
+  ConsumerState<LoadingPage> createState() => _LoadingPageState();
 }
 
-class _LoadingPageState extends State<LoadingPage>
+class _LoadingPageState extends ConsumerState<LoadingPage>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _dotsController;
@@ -54,12 +54,11 @@ class _LoadingPageState extends State<LoadingPage>
 
         await Future.delayed(const Duration(milliseconds: 300));
 
-      //Debug: Check auth state before navigating
 
       final user = FirebaseAuth.instance.currentUser;
       print('LoadingPage - About to navigate. Current user: ${user?.email ?? 'No user'}');
 
-      // Navigate to AuthPage (which handles login/register logic)
+      //navigate to AuthPage (which handles login/register logic)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AuthPage()),

@@ -1,11 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// ============================================
-// STEP 1: Create a Provider for FirebaseAuth instance
-// ============================================
-// This is like creating a single remote control that everyone can use
-// We only create ONE instance of FirebaseAuth and share it everywhere
+
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
