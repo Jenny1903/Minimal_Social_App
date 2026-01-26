@@ -73,7 +73,7 @@ class AuthPage extends ConsumerWidget {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Retry by invalidating the provider
+                    //retry by invalidating the provider
                     ref.invalidate(authStateProvider);
                   },
                   child: const Text('Retry'),
