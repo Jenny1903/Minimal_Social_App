@@ -9,6 +9,7 @@ class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key, required this.onTap});
   final void Function()? onTap;
 
+
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }

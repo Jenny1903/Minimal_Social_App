@@ -5,7 +5,9 @@ import 'package:social_app/components/my_textfield.dart';
 import 'package:social_app/providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+  final void Function()? onTap;
+
+  const LoginPage({super.key, required this.onTap});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -194,7 +196,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: togglePages,
+                        onTap: widget.onTap,
                         child: Text(
                           showLoginPage ? 'Register here' : 'Login here',
                           style: TextStyle(
