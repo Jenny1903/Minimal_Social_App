@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../providers/posts_provider.dart';
+
 class MyListTile extends ConsumerWidget {
   final String postId;
   final String title;
