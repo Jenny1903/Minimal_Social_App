@@ -6,7 +6,6 @@ import 'package:social_app/components/my_drawer.dart';
 import 'package:social_app/components/my_list_tile.dart';
 import 'package:social_app/components/my_post_button.dart';
 import 'package:social_app/components/my_textfield.dart';
-import 'package:social_app/database/firestore.dart';
 import 'package:social_app/providers/posts_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -26,9 +25,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  //============================================
-  // POST MESSAGE - Using Riverpod
-  //============================================
+
+  //POST MESSAGE - Using Riverpod
+
   Future<void> postMessage() async {
     // Only post if there's something in the textfield
     if (newPostController.text.isEmpty) return;
@@ -68,10 +67,9 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    //============================================
-    // WATCH the posts stream using Riverpod
-    // This replaces your old StreamBuilder!
-    //============================================
+
+    //WATCH the posts stream using Riverpod
+
     final postsStream = ref.watch(postsStreamProvider);
 
     return Scaffold(
@@ -101,9 +99,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           //main content
           Column(
             children: [
-              //========================================
-              //POST INPUT SECTION
-              //========================================
+              //post input
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -152,9 +148,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
               const SizedBox(height: 10),
 
-              //========================================
-              // POSTS LIST - Using Riverpod!
-              //========================================
+              //posts list
+
               Expanded(
                 child: postsStream.when(
 
@@ -199,16 +194,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                         final post = posts[index];
 
                         // Get data from each post
+                        String postId = post.id;
                         String message = post['PostMessage'];
                         String userEmail = post['UserEmail'];
                         Timestamp timestamp = post['TimeStamp'];
+                        List<dynamic> likes = post['Likes'] ?? [];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: MyListTile(
+                            postId: postId,
                             title: message,
                             subTitle: userEmail,
                             timestamp: timestamp,
+                            likes: likes,
                           ),
                         );
                       },
