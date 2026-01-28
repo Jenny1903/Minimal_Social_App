@@ -50,6 +50,43 @@ class PostsService {
       'TimeStamp': Timestamp.now(),  // Update timestamp too
     });
   }
+
+  //========== TOGGLE LIKE ON A POST ==========
+  Future<void> toggleLike(String postId) async {
+    if (_userEmail == null){
+      throw Exception('User must be logged in to like posts');
+    }
+    final postDoc = _postsCollection.doc(postId);
+    final postSnapshot = await postDoc.get();
+
+    if (!postSnapshot.exists) {
+      throw Exception('Post not found');
+    }
+
+    List<String> likes = List<String>.from(postSnapshot.get('Likes') ?? []);
+
+    //check if user already liked this post
+    if (likes.contains(_userEmail)) {
+
+      //unlike: Remove user from likes array
+      likes.remove(_userEmail);
+    } else {
+
+      //like: Add user to likes array
+      likes.add(_userEmail!);
+    }
+
+    //update the post with new likes array
+    return postDoc.update({
+      'Likes': likes,
+    });
+  }
+
+  //========== CHECK IF CURRENT USER LIKED A POST ==========
+  bool hasUserLiked(List<dynamic> likes) {
+    if (_userEmail == null) return false;
+    return likes.contains(_userEmail);
+  }
 }
 
 

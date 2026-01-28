@@ -287,5 +287,5 @@ If you like this project, please consider:
 <p align="center">
   <strong>Made with ❤️ using Flutter</strong>
   <br>
-  <sub>© 2025 Fello. All rights reserved.</sub>
+  <sub>© 2026 Fello. All rights reserved.</sub>
 </p>
