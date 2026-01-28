@@ -117,7 +117,14 @@ class MyListTile extends ConsumerWidget {
           //action buttons
           Row(
             children: [
-              _buildActionButton(context, Icons.favorite_border, "Like"),
+              _buildLikeButton(
+                  context,
+                  ref,
+                  isLiked,
+                  likeCount,
+                  postId,
+                  postsService,
+              ),
               const SizedBox(width: 20),
               _buildActionButton(context, Icons.chat_bubble_outline, "Comment"),
               const SizedBox(width: 20),
@@ -175,6 +182,7 @@ class MyListTile extends ConsumerWidget {
     );
   }
 
+  //action button
   Widget _buildActionButton(BuildContext context, IconData icon, String label) {
     return Row(
       children: [
