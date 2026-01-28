@@ -1,69 +1,109 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:social_app/components/my_drawer.dart';
 import 'package:social_app/components/my_list_tile.dart';
 import 'package:social_app/components/my_post_button.dart';
 import 'package:social_app/components/my_textfield.dart';
 import 'package:social_app/database/firestore.dart';
+import 'package:social_app/providers/posts_provider.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   //firestore access
-  final FirestoreDatabase database = FirestoreDatabase();
-
-  //text controller
   final TextEditingController newPostController = TextEditingController();
 
-  //post message
-  void postMessage() {
-    //only post message if there is something in the textfield
-    if (newPostController.text.isNotEmpty) {
-      String message = newPostController.text;
-      database.addPost(message);
-    }
+  @override
+  void dispose() {
+    newPostController.dispose();
+    super.dispose();
+  }
 
-    //clear the controller
-    newPostController.clear();
+  //============================================
+  // POST MESSAGE - Using Riverpod
+  //============================================
+  Future<void> postMessage() async {
+    // Only post if there's something in the textfield
+    if (newPostController.text.isEmpty) return;
+
+    try {
+
+      final postsService = ref.read(postsServiceProvider);
+
+      //add the post
+      await postsService.addPost(newPostController.text);
+
+      //clear the textfield
+      newPostController.clear();
+
+      //show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post created!'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+    } catch (e) {
+      //handle errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    //============================================
+    // WATCH the posts stream using Riverpod
+    // This replaces your old StreamBuilder!
+    //============================================
+    final postsStream = ref.watch(postsStreamProvider);
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
-        title: Text("F E L L O"),
+        title: const Text("F E L L O"),
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 0,
       ),
 
-      //drawer
       drawer: const MyDrawer(),
 
       body: Stack(
         children: [
-          // Lottie background for entire screen
+          //lottie background for entire screen
           Positioned.fill(
             child: Opacity(
-              opacity: 0.6, // Adjust opacity as needed
+              opacity: 0.1,
               child: Lottie.asset(
-                'assets/lottie/liking.json',
-                fit: BoxFit.contain,
+                'assets/images/liking.json',
+                fit: BoxFit.cover,
               ),
             ),
           ),
 
-          //main content on top
+          //main content
           Column(
             children: [
-              //pOST INPUT SECTION
+              //========================================
+              //POST INPUT SECTION
+              //========================================
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -78,7 +118,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Row(
                   children: [
-                    // User avatar
+                    //user avatar
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -90,6 +130,7 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     const SizedBox(width: 12),
+
                     //textfield
                     Expanded(
                       child: MyTextfield(
@@ -100,6 +141,7 @@ class _HomePageState extends State<HomePage> {
                     ),
 
                     const SizedBox(width: 8),
+
                     //post button
                     PostButton(
                       onTap: postMessage,
@@ -109,30 +151,24 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 10),
+
+              //========================================
+              // POSTS LIST - Using Riverpod!
+              //========================================
               Expanded(
-                child: StreamBuilder(
-                  stream: database.getPostsStream(),
-                  builder: (context, snapshot) {
-                    // Show loading
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                        ),
-                      );
-                    }
+                child: postsStream.when(
 
-                    // Get all posts
-                    final posts = snapshot.data!.docs;
+                  //DATA - We have posts
+                  data: (snapshot) {
+                    final posts = snapshot.docs;
 
-                    // No data - Show beautiful empty state
-                    if (snapshot.data == null || posts.isEmpty) {
+                    //no posts - Show empty state
+                    if (posts.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const SizedBox(height: 20),
-
                             Text(
                               "No posts yet",
                               style: TextStyle(
@@ -141,9 +177,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Theme.of(context).colorScheme.inversePrimary,
                               ),
                             ),
-
                             const SizedBox(height: 8),
-
                             Text(
                               "Be the first to share something!",
                               style: TextStyle(
@@ -156,20 +190,19 @@ class _HomePageState extends State<HomePage> {
                       );
                     }
 
-                    //return posts list
+                    //display posts
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       itemCount: posts.length,
                       itemBuilder: (context, index) {
-                        //get individual post
+                        // Get individual post
                         final post = posts[index];
 
-                        //get data from each post
+                        // Get data from each post
                         String message = post['PostMessage'];
                         String userEmail = post['UserEmail'];
                         Timestamp timestamp = post['TimeStamp'];
 
-                        //return as a card with spacing
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: MyListTile(
@@ -181,6 +214,49 @@ class _HomePageState extends State<HomePage> {
                       },
                     );
                   },
+
+                  //LOADING - Waiting for posts
+                  loading: () => Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.inversePrimary,
+                    ),
+                  ),
+
+                  //ERROR - Something went wrong
+                  error: (error, stackTrace) => Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 60,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading posts',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Theme.of(context).colorScheme.inversePrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          error.toString(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Retry by invalidating the provider
+                            ref.invalidate(postsStreamProvider);
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
