@@ -18,7 +18,7 @@ class PostsService {
   //get reference to Posts collection
   CollectionReference get _postsCollection => _firestore.collection('Posts');
 
-  //========== ADD A POST ==========
+  //add a post
   Future<void> addPost(String message) async {
     if (_userEmail == null) {
       throw Exception('User must be logged in to post');
@@ -28,26 +28,27 @@ class PostsService {
       'UserEmail': _userEmail,
       'PostMessage': message,
       'TimeStamp': Timestamp.now(),
+      'Likes': [],
     });
   }
 
-  //========== GET POSTS STREAM ==========
+  //get post stream
   Stream<QuerySnapshot> getPostsStream() {
     return _postsCollection
         .orderBy('TimeStamp', descending: true)
         .snapshots();
   }
 
-  //========== DELETE A POST (Bonus!) ==========
+  //delete a post
   Future<void> deletePost(String postId) async {
     return _postsCollection.doc(postId).delete();
   }
 
-  //========== UPDATE A POST (Bonus!) ==========
+  //update a post
   Future<void> updatePost(String postId, String newMessage) async {
     return _postsCollection.doc(postId).update({
       'PostMessage': newMessage,
-      'TimeStamp': Timestamp.now(),  // Update timestamp too
+      'TimeStamp': Timestamp.now(),
     });
   }
 
@@ -82,7 +83,7 @@ class PostsService {
     });
   }
 
-  //========== CHECK IF CURRENT USER LIKED A POST ==========
+  //check if user liked a post
   bool hasUserLiked(List<dynamic> likes) {
     if (_userEmail == null) return false;
     return likes.contains(_userEmail);
