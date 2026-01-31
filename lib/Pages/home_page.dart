@@ -90,8 +90,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             child: Opacity(
               opacity: 0.1,
               child: Lottie.asset(
-                'assets/images/liking.json',
-                fit: BoxFit.cover,
+                'assets/lottie/liking.json',
+                fit: BoxFit.contain,
               ),
             ),
           ),

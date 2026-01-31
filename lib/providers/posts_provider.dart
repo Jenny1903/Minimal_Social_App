@@ -64,7 +64,12 @@ class PostsService {
       throw Exception('Post not found');
     }
 
-    List<String> likes = List<String>.from(postSnapshot.get('Likes') ?? []);
+    final postData = postSnapshot.data() as Map<String, dynamic>?;
+
+    List<String> likes = [];
+    if (postData != null && postData.containsKey('Likes')) {
+      likes = List<String>.from(postData['Likes']);
+    }
 
     //check if user already liked this post
     if (likes.contains(_userEmail)) {

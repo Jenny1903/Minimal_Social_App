@@ -9,7 +9,7 @@ import 'package:social_app/providers/auth_provider.dart';
 class RegisterPage extends ConsumerStatefulWidget {
   final void Function()? onTap;
 
-  const RegisterPage({super.key, required this.onTap});
+  const RegisterPage({super.key, this.onTap});
 
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();

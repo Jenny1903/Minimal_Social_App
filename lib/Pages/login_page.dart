@@ -7,7 +7,7 @@ import 'package:social_app/providers/auth_provider.dart';
 class LoginPage extends ConsumerStatefulWidget {
   final void Function()? onTap;
 
-  const LoginPage({super.key, required this.onTap});
+  const LoginPage({super.key, this.onTap});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
@@ -196,6 +196,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ),
                       GestureDetector(
+
                         onTap: widget.onTap,
                         child: Text(
                           showLoginPage ? 'Register here' : 'Login here',
