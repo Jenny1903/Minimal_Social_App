@@ -192,13 +192,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                       itemBuilder: (context, index) {
                         // Get individual post
                         final post = posts[index];
+                        final postData = post.data() as Map<String, dynamic>;
 
                         // Get data from each post
                         String postId = post.id;
                         String message = post['PostMessage'];
                         String userEmail = post['UserEmail'];
                         Timestamp timestamp = post['TimeStamp'];
-                        List<dynamic> likes = post['Likes'] ?? [];
+
+                        List<dynamic> likes = postData.containsKey('Likes')
+                            ? postData['Likes'] as List<dynamic>
+                            : [];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
