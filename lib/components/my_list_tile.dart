@@ -5,18 +5,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/posts_provider.dart';
 
 class MyListTile extends ConsumerWidget {
-  final String postId;
+  final String? postId;
   final String title;
   final String subTitle;
   final Timestamp? timestamp;
-  final List<dynamic> likes;
+  final List<dynamic>? likes;
 
   const MyListTile({
     super.key,
-    required this.postId,
+    this.postId,
     required this.title,
     required this.subTitle,
-    required this.likes,
+    this.likes,
     this.timestamp,
 
   });
@@ -27,8 +27,8 @@ class MyListTile extends ConsumerWidget {
     final postsService = ref.read(postsServiceProvider);
 
     //check if current user liked this post
-    final isLiked = postsService.hasUserLiked(likes);
-    final likeCount = likes.length;
+    final isLiked = postsService.hasUserLiked(likes ?? []);
+    final likeCount = likes?.length ?? 0;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
@@ -47,7 +47,7 @@ class MyListTile extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User info row
+          //user info row
           Row(
             children: [
               // Avatar
@@ -122,7 +122,7 @@ class MyListTile extends ConsumerWidget {
                   ref,
                   isLiked,
                   likeCount,
-                  postId,
+                  postId!,
                   postsService,
               ),
               const SizedBox(width: 20),
