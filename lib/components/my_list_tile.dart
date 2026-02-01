@@ -144,41 +144,37 @@ class MyListTile extends ConsumerWidget {
       String postId,
       PostsService postsService,
       ) {
-    return GestureDetector(
-      onTap: () async {
-        // Toggle like
-        try {
-          await postsService.toggleLike(postId);
-        } catch (e) {
-          // Show error if something goes wrong
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Row(
-        children: [
-          //heart icon - filled if liked, outline if not
-          Icon(
-            isLiked ? Icons.favorite : Icons.favorite_border,
-            size: 18,
-            color: isLiked
-                ? Colors.red  // Red if liked
-                : Theme.of(context).colorScheme.secondary,  // Gray if not
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () async {
+            // Toggle like
+            try {
+              await postsService.toggleLike(postId);
+            } catch (e) {
+              //show error if something goes wrong
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(e.toString()),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          child:
+              //heart icon - filled if liked, outline if not
+              Icon(
+                isLiked ? Icons.favorite : Icons.favorite_border,
+                size: 18,
+                color: isLiked
+                    ? Colors.red  // Red if liked
+                    : Theme.of(context).colorScheme.secondary,  // Gray if not
+              ),
           ),
-          const SizedBox(width: 4),
-          Text(
-            likeCount > 0 ? '$likeCount' : 'Like',
-            style: TextStyle(
-              fontSize: 13,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-          ),
-        ],
-      ),
+
+              const SizedBox(width: 4),
+
+      ],
     );
   }
 

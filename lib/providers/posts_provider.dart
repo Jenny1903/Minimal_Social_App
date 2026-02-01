@@ -70,6 +70,7 @@ class PostsService {
     if (postData != null && postData.containsKey('Likes')) {
       likes = List<String>.from(postData['Likes']);
     }
+    
 
     //check if user already liked this post
     if (likes.contains(_userEmail)) {
