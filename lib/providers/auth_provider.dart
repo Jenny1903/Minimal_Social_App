@@ -2,11 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
-
 
 final authStateProvider = StreamProvider<User?>((ref) {
   //get the FirebaseAuth instance from our provider above
@@ -15,8 +13,6 @@ final authStateProvider = StreamProvider<User?>((ref) {
   //return a stream that emits whenever auth state changes
   return auth.authStateChanges();
 });
-
-
 
 class AuthService {
   final FirebaseAuth _auth;
@@ -30,10 +26,7 @@ class AuthService {
   //========== SIGN IN ==========
   Future<void> signIn(String email, String password) async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
       // Handle specific errors
       throw _handleAuthException(e);
@@ -43,32 +36,32 @@ class AuthService {
   //SIGN UP
   Future<void> signUp(String email, String password, String username) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       //create user document in firestore with username
       await _createUserDocument(userCredential, username);
-
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
 
   //CREATE USER DOCUMENT
-  Future<void> _createUserDocument(UserCredential userCredential, String username) async{
-    if (userCredential.user != null){
+  Future<void> _createUserDocument(
+    UserCredential userCredential,
+    String username,
+  ) async {
+    if (userCredential.user != null) {
       await FirebaseFirestore.instance
           .collection('User')
           .doc(userCredential.user!.uid)
           .set({
-        'uid': userCredential.user!.uid,
-        'email': userCredential.user!.email,
-        'username': username,
-        'bio': '',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+            'uid': userCredential.user!.uid,
+            'email': userCredential.user!.email,
+            'username': username,
+            'bio': '',
+            'createdAt': FieldValue.serverTimestamp(),
+          });
     }
   }
 
@@ -98,8 +91,25 @@ class AuthService {
 
 //provider for AuthService
 final authServiceProvider = Provider<AuthService>((ref) {
-
   final auth = ref.watch(firebaseAuthProvider);
 
   return AuthService(auth);
+});
+
+//get current user data (with username)
+final currentUserDataProvider = StreamProvider<DocumentSnapshot?>((ref) {
+  final authState = ref.watch(authStateProvider);
+
+  final user = authState.value;
+
+  if (user == null) {
+    // No user logged in, return null stream
+    return Stream.value(null);
+  }
+
+  //stream the user's document from Firestore
+  return FirebaseFirestore.instance
+      .collection('Users')
+      .doc(user.uid)
+      .snapshots();
 });
