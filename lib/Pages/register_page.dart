@@ -56,7 +56,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       //Get AuthService from Riverpod
       final authService = ref.read(authServiceProvider);
 
-      // Create the user with Firebase Auth
+      //create the user with Firebase Auth
       await authService.signUp(
         emailController.text.trim(),
         passwordController.text.trim(),
@@ -65,12 +65,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       //Get current user from Riverpod
       final currentUser = ref.read(authServiceProvider).currentUser;
 
+
       //Create user document in Firestore
       if (currentUser != null) {
         await createUserDocument(currentUser.email, usernameController.text);
       }
 
-      //Success! authStateProvider will automatically update
+      //authStateProvider will automatically update
       //and navigate to HomePage
 
     } catch (e) {
@@ -83,7 +84,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
 
-  // CREATE USER DOCUMENT IN FIRESTORE
+  //CREATE USER DOCUMENT IN FIRESTORE
 
   Future<void> createUserDocument(String? email, String username) async {
     if (email != null) {
@@ -99,6 +100,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     }
   }
 
+//error loading
   void showError(String message) {
     showDialog(
       context: context,
