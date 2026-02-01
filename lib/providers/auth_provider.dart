@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
@@ -39,24 +40,44 @@ class AuthService {
     }
   }
 
-  //========== SIGN UP ==========
-  Future<void> signUp(String email, String password) async {
+  //SIGN UP
+  Future<void> signUp(String email, String password, String username) async {
     try {
-      await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+
+      //create user document in firestore with username
+      await _createUserDocument(userCredential, username);
+
     } on FirebaseAuthException catch (e) {
       throw _handleAuthException(e);
     }
   }
 
-  //========== SIGN OUT ==========
+  //CREATE USER DOCUMENT
+  Future<void> _createUserDocument(UserCredential userCredential, String username) async{
+    if (userCredential.user != null){
+      await FirebaseFirestore.instance
+          .collection('User')
+          .doc(userCredential.user!.uid)
+          .set({
+        'uid': userCredential.user!.uid,
+        'email': userCredential.user!.email,
+        'username': username,
+        'bio': '',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  //SIGN OUT
   Future<void> signOut() async {
     await _auth.signOut();
   }
 
-  //========== ERROR HANDLING ==========
+  //ERROR HANDLING
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
@@ -75,10 +96,10 @@ class AuthService {
   }
 }
 
+//provider for AuthService
 final authServiceProvider = Provider<AuthService>((ref) {
 
   final auth = ref.watch(firebaseAuthProvider);
-
 
   return AuthService(auth);
 });
