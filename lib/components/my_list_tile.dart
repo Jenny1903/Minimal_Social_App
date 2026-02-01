@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_app/components/who_liked_sheet.dart';
 
 import '../providers/posts_provider.dart';
 
@@ -146,9 +147,11 @@ class MyListTile extends ConsumerWidget {
       ) {
     return Row(
       children: [
+
+        //heart icon ~ tap to like/unlike
         GestureDetector(
           onTap: () async {
-            // Toggle like
+            //toggle like
             try {
               await postsService.toggleLike(postId);
             } catch (e) {
@@ -161,19 +164,43 @@ class MyListTile extends ConsumerWidget {
               );
             }
           },
-          child:
-              //heart icon - filled if liked, outline if not
-              Icon(
-                isLiked ? Icons.favorite : Icons.favorite_border,
-                size: 18,
-                color: isLiked
-                    ? Colors.red  // Red if liked
-                    : Theme.of(context).colorScheme.secondary,  // Gray if not
-              ),
+          child: Icon(
+            isLiked ? Icons.favorite : Icons.favorite_border,
+            size: 18,
+            color: isLiked
+                ? Colors.red  //red if liked
+                : Theme.of(context).colorScheme.secondary,  //gray if not
           ),
+        ),
 
-              const SizedBox(width: 4),
+        const SizedBox(width: 4),
 
+        //kike count ~ tap to see who liked
+        GestureDetector(
+          onTap: () {
+            // Show who liked this post
+            if (likeCount > 0 && likes != null) {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (context) => WhoLikedSheet(
+                  likes: likes!.map((e) => e.toString()).toList(),
+                ),
+              );
+            }
+          },
+          child: Text(
+            likeCount > 0 ? '$likeCount' : 'Like',
+            style: TextStyle(
+              fontSize: 13,
+              color: likeCount > 0
+                  ? Theme.of(context).colorScheme.inversePrimary  //bold if has likes
+                  : Theme.of(context).colorScheme.secondary,       //gray if no likes
+              fontWeight: likeCount > 0 ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
       ],
     );
   }
