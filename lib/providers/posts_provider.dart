@@ -2,123 +2,155 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/auth_provider.dart';
 
-
+//firestore provider
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
 
+//posts service ~ Professional Structure
+
 class PostsService {
   final FirebaseFirestore _firestore;
+  final String? _userId;
   final String? _userEmail;
+  final String? _username;
 
-  //constructor receives Firestore and current user email
-  PostsService(this._firestore, this._userEmail);
+  PostsService(this._firestore, this._userId, this._userEmail, this._username);
 
-  //get reference to Posts collection
   CollectionReference get _postsCollection => _firestore.collection('Posts');
 
   //add a post
   Future<void> addPost(String message) async {
-    if (_userEmail == null) {
+    if (_userId == null) {
       throw Exception('User must be logged in to post');
     }
 
     await _postsCollection.add({
-      'UserEmail': _userEmail,
+      'userId': _userId,
+      'userEmail': _userEmail,
+      'username': _username ?? 'Anonymous',
       'PostMessage': message,
       'TimeStamp': Timestamp.now(),
-      'Likes': [],
+      'likeCount': 0,
     });
   }
 
-  //get post stream
+  //get posts stream
   Stream<QuerySnapshot> getPostsStream() {
     return _postsCollection
         .orderBy('TimeStamp', descending: true)
         .snapshots();
   }
 
-  //delete a post
-  Future<void> deletePost(String postId) async {
-    return _postsCollection.doc(postId).delete();
-  }
-
-  //update a post
-  Future<void> updatePost(String postId, String newMessage) async {
-    return _postsCollection.doc(postId).update({
-      'PostMessage': newMessage,
-      'TimeStamp': Timestamp.now(),
-    });
-  }
-
-  //========== TOGGLE LIKE ON A POST ==========
+  //toggle like
   Future<void> toggleLike(String postId) async {
-    if (_userEmail == null){
+    if (_userId == null) {
       throw Exception('User must be logged in to like posts');
     }
+
     final postDoc = _postsCollection.doc(postId);
-    final postSnapshot = await postDoc.get();
+    final likeDoc = postDoc.collection('Likes').doc(_userId);
 
-    if (!postSnapshot.exists) {
-      throw Exception('Post not found');
-    }
+    //check if user already liked
+    final likeSnapshot = await likeDoc.get();
 
-    final postData = postSnapshot.data() as Map<String, dynamic>?;
+    if (likeSnapshot.exists) {
+      //UNLIKE: Remove like document
+      await likeDoc.delete();
 
-    List<String> likes = [];
-    if (postData != null && postData.containsKey('Likes')) {
-      likes = List<String>.from(postData['Likes']);
-    }
-    
-
-    //check if user already liked this post
-    if (likes.contains(_userEmail)) {
-
-      //unlike: Remove user from likes array
-      likes.remove(_userEmail);
+      //decrement like count
+      await postDoc.update({
+        'likeCount': FieldValue.increment(-1),
+      });
     } else {
+      //LIKE: Create like document
+      await likeDoc.set({
+        'userId': _userId,
+        'userEmail': _userEmail,
+        'username': _username ?? 'Anonymous',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
-      //like: Add user to likes array
-      likes.add(_userEmail!);
+      //increment like count
+      await postDoc.update({
+        'likeCount': FieldValue.increment(1),
+      });
     }
-
-    //update the post with new likes array
-    return postDoc.update({
-      'Likes': likes,
-    });
   }
 
   //check if user liked a post
-  bool hasUserLiked(List<dynamic> likes) {
-    if (_userEmail == null) return false;
-    return likes.contains(_userEmail);
+  Future<bool> hasUserLiked(String postId) async {
+    if (_userId == null) return false;
+
+    final likeDoc = await _postsCollection
+        .doc(postId)
+        .collection('Likes')
+        .doc(_userId)
+        .get();
+
+    return likeDoc.exists;
+  }
+
+  //getting- who liked the post
+  Stream<QuerySnapshot> getPostLikes(String postId) {
+    return _postsCollection
+        .doc(postId)
+        .collection('Likes')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  //delete post
+  Future<void> deletePost(String postId) async {
+    // Delete all likes first
+    final likesSnapshot = await _postsCollection
+        .doc(postId)
+        .collection('Likes')
+        .get();
+
+    for (var doc in likesSnapshot.docs) {
+      await doc.reference.delete();
+    }
+
+    //delete the post
+    await _postsCollection.doc(postId).delete();
   }
 }
 
-
+//posts service provider
 final postsServiceProvider = Provider<PostsService>((ref) {
-  //watch the Firestore instance
   final firestore = ref.watch(firestoreProvider);
-
-  //watch the auth STATE to get current user email
-  //this way it updates automatically when user logs in/out
   final authState = ref.watch(authStateProvider);
+  final user = authState.value;
 
-  //get email from auth state (will be null if not logged in)
-  final userEmail = authState.value?.email;
+  //get user data (with username)
+  final userDataState = ref.watch(currentUserDataProvider);
+  final userData = userDataState.value?.data() as Map<String, dynamic>?;
 
-  //create and return PostsService
-  return PostsService(firestore, userEmail);
+  return PostsService(
+    firestore,
+    user?.uid,
+    user?.email,
+    userData?['username'],
+  );
 });
 
-
-
+//posts stream provider
 final postsStreamProvider = StreamProvider<QuerySnapshot>((ref) {
-  //get the PostsService
   final postsService = ref.watch(postsServiceProvider);
-
-  // Return the stream of posts
   return postsService.getPostsStream();
+});
+
+//individual post like provider
+final postLikesProvider = StreamProvider.family<QuerySnapshot, String>((ref, postId) {
+  final postsService = ref.watch(postsServiceProvider);
+  return postsService.getPostLikes(postId);
+});
+
+//check if user liked provider
+final hasUserLikedProvider = FutureProvider.family<bool, String>((ref, postId) async {
+  final postsService = ref.watch(postsServiceProvider);
+  return postsService.hasUserLiked(postId);
 });
 
