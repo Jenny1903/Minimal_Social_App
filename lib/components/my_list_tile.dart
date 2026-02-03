@@ -1,35 +1,33 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:social_app/providers/posts_provider.dart';
 import 'package:social_app/components/who_liked_sheet.dart';
 
-import '../providers/posts_provider.dart';
+
 
 class MyListTile extends ConsumerWidget {
-  final String? postId;
+  final String postId;
   final String title;
-  final String subTitle;
+  final String username;
   final Timestamp? timestamp;
-  final List<dynamic>? likes;
+  final int likeCount;
 
   const MyListTile({
     super.key,
-    this.postId,
+    required this.postId,
     required this.title,
-    required this.subTitle,
-    this.likes,
+    required this.username,
+    required this.likeCount,
     this.timestamp,
-
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
     final postsService = ref.read(postsServiceProvider);
 
-    //check if current user liked this post
-    final isLiked = postsService.hasUserLiked(likes ?? []);
-    final likeCount = likes?.length ?? 0;
+    // Watch if current user liked this post
+    final hasLiked = ref.watch(hasUserLikedProvider(postId));
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
@@ -48,29 +46,31 @@ class MyListTile extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          //user info row
+          // User info row
           Row(
             children: [
               // Avatar
               CircleAvatar(
                 radius: 18,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
-                child: Icon(
-                  Icons.person,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.inversePrimary,
+                child: Text(
+                  username[0].toUpperCase(),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.inversePrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
 
               const SizedBox(width: 10),
 
-              //user email and time
+              // Username and time
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      subTitle,
+                      '@$username',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -79,7 +79,6 @@ class MyListTile extends ConsumerWidget {
                     ),
                     if (timestamp != null) ...[
                       const SizedBox(height: 2),
-
                       Text(
                         _formatTime(timestamp!),
                         style: TextStyle(
@@ -92,7 +91,7 @@ class MyListTile extends ConsumerWidget {
                 ),
               ),
 
-              //more options
+              // More options
               Icon(
                 Icons.more_horiz,
                 color: Theme.of(context).colorScheme.secondary,
@@ -103,7 +102,7 @@ class MyListTile extends ConsumerWidget {
 
           const SizedBox(height: 12),
 
-          //post message
+          // Post message
           Text(
             title,
             style: TextStyle(
@@ -115,17 +114,10 @@ class MyListTile extends ConsumerWidget {
 
           const SizedBox(height: 12),
 
-          //action buttons
+          // Action buttons
           Row(
             children: [
-              _buildLikeButton(
-                  context,
-                  ref,
-                  isLiked,
-                  likeCount,
-                  postId!,
-                  postsService,
-              ),
+              _buildLikeButton(context, ref, hasLiked, postsService),
               const SizedBox(width: 20),
               _buildActionButton(context, Icons.chat_bubble_outline, "Comment"),
               const SizedBox(width: 20),
@@ -140,22 +132,19 @@ class MyListTile extends ConsumerWidget {
   Widget _buildLikeButton(
       BuildContext context,
       WidgetRef ref,
-      bool isLiked,
-      int likeCount,
-      String postId,
+      AsyncValue<bool> hasLiked,
       PostsService postsService,
       ) {
+    final isLiked = hasLiked.value ?? false;
+
     return Row(
       children: [
-
-        //heart icon ~ tap to like/unlike
+        // Heart icon
         GestureDetector(
           onTap: () async {
-            //toggle like
             try {
               await postsService.toggleLike(postId);
             } catch (e) {
-              //show error if something goes wrong
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(e.toString()),
@@ -167,26 +156,21 @@ class MyListTile extends ConsumerWidget {
           child: Icon(
             isLiked ? Icons.favorite : Icons.favorite_border,
             size: 18,
-            color: isLiked
-                ? Colors.red  //red if liked
-                : Theme.of(context).colorScheme.secondary,  //gray if not
+            color: isLiked ? Colors.red : Theme.of(context).colorScheme.secondary,
           ),
         ),
 
         const SizedBox(width: 4),
 
-        //kike count ~ tap to see who liked
+        // Like count
         GestureDetector(
           onTap: () {
-            // Show who liked this post
-            if (likeCount > 0 && likes != null) {
+            if (likeCount > 0) {
               showModalBottomSheet(
                 context: context,
                 backgroundColor: Colors.transparent,
                 isScrollControlled: true,
-                builder: (context) => WhoLikedSheet(
-                  likes: likes!.map((e) => e.toString()).toList(),
-                ),
+                builder: (context) => WhoLikedSheet(postId: postId),
               );
             }
           },
@@ -195,8 +179,8 @@ class MyListTile extends ConsumerWidget {
             style: TextStyle(
               fontSize: 13,
               color: likeCount > 0
-                  ? Theme.of(context).colorScheme.inversePrimary  //bold if has likes
-                  : Theme.of(context).colorScheme.secondary,       //gray if no likes
+                  ? Theme.of(context).colorScheme.inversePrimary
+                  : Theme.of(context).colorScheme.secondary,
               fontWeight: likeCount > 0 ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
@@ -205,7 +189,6 @@ class MyListTile extends ConsumerWidget {
     );
   }
 
-  //action button
   Widget _buildActionButton(BuildContext context, IconData icon, String label) {
     return Row(
       children: [
