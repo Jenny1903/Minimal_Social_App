@@ -170,7 +170,8 @@ class MyListTile extends ConsumerWidget {
                 context: context,
                 backgroundColor: Colors.transparent,
                 isScrollControlled: true,
-                builder: (context) => WhoLikedSheet(postId: postId),
+                builder: (context) => WhoLikedSheet(
+                    postId: postId),
               );
             }
           },
