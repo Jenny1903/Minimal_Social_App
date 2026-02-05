@@ -4,6 +4,7 @@ import 'package:social_app/components/my_button.dart';
 import 'package:social_app/components/my_textfield.dart';
 import 'package:social_app/providers/auth_provider.dart';
 
+
 class LoginPage extends ConsumerStatefulWidget {
   final void Function()? onTap;
 
@@ -13,7 +14,6 @@ class LoginPage extends ConsumerStatefulWidget {
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-//notice: ConsumerState instead of State
 class _LoginPageState extends ConsumerState<LoginPage> {
   //text controllers
   final TextEditingController emailController = TextEditingController();
@@ -22,9 +22,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   //loading state
   bool isLoading = false;
 
-  //toggle between login and register
-  bool showLoginPage = true;
-
   @override
   void dispose() {
     emailController.dispose();
@@ -32,8 +29,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
+ //login function
   Future<void> login() async {
-    //validate inputs
+    // Validate inputs
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       showError('Please fill all fields');
       return;
@@ -43,14 +41,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
 
+      //one-time action (button press)
       final authService = ref.read(authServiceProvider);
 
+      // Call the signIn method
       await authService.signIn(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
 
-
+      //authStateProvider will automatically update
+      //and auth.dart will navigate to HomePage
 
     } catch (e) {
       //show error to user
@@ -62,31 +63,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  Future<void> register() async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      showError('Please fill all fields');
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      final authService = ref.read(authServiceProvider);
-
-      await authService.signUp(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-
-    } catch (e) {
-      showError(e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
-    }
-  }
-
+//show error dialogue
   void showError(String message) {
     showDialog(
       context: context,
@@ -101,12 +78,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ],
       ),
     );
-  }
-
-  void togglePages() {
-    setState(() {
-      showLoginPage = !showLoginPage;
-    });
   }
 
   @override
@@ -131,12 +102,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const SizedBox(height: 25),
 
                   //app name
-                  Text(
+                  const Text(
                     'F E L L O',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.inversePrimary,
                     ),
                   ),
 
@@ -173,33 +143,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                   const SizedBox(height: 25),
 
-                  //login/Register button
+                  //login button
                   isLoading
                       ? const CircularProgressIndicator()
                       : MyButton(
-                    text: showLoginPage ? 'Login' : 'Register',
-                    onTap: showLoginPage ? login : register,
+                    text: 'Login',
+                    onTap: login,
                   ),
 
                   const SizedBox(height: 25),
 
-                  //toggle to register/login
+                  //toggle to register page
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        showLoginPage
-                            ? "Don't have an account? "
-                            : "Already have an account? ",
+                        "Don't have an account? ",
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.inversePrimary,
                         ),
                       ),
                       GestureDetector(
-
                         onTap: widget.onTap,
                         child: Text(
-                          showLoginPage ? 'Register here' : 'Login here',
+                          'Register here',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.inversePrimary,
