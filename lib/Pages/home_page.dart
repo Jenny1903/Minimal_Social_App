@@ -8,6 +8,7 @@ import 'package:social_app/components/my_post_button.dart';
 import 'package:social_app/components/my_textfield.dart';
 import 'package:social_app/providers/posts_provider.dart';
 
+
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -26,7 +27,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
 
-  //POST MESSAGE - Using Riverpod
+  //POST MESSAGE
 
   Future<void> postMessage() async {
     // Only post if there's something in the textfield
@@ -153,7 +154,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               Expanded(
                 child: postsStream.when(
 
-                  //DATA - We have posts
+                  //DATA
                   data: (snapshot) {
                     final posts = snapshot.docs;
 
@@ -196,22 +197,19 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                         // Get data from each post
                         String postId = post.id;
-                        String message = post['PostMessage'];
-                        String userEmail = post['UserEmail'];
-                        Timestamp timestamp = post['TimeStamp'];
-
-                        List<dynamic> likes = postData.containsKey('Likes')
-                            ? postData['Likes'] as List<dynamic>
-                            : [];
+                        String message = postData['PostMessage'] ?? '';
+                        String username = postData['username'] ?? 'Anonymous';
+                        Timestamp? timestamp = postData['TimeStamp'];
+                        int likeCount = postData['likeCount'] ?? 0;
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: MyListTile(
                             postId: postId,
                             title: message,
-                            subTitle: userEmail,
+                            username: username,
                             timestamp: timestamp,
-                            likes: likes,
+                            likeCount: likeCount,
                           ),
                         );
                       },
