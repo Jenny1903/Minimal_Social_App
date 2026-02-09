@@ -1,20 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';  // 👈 ADD THIS
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
-//provider for FirebaseAuth instance
-
+//create a Provider for FirebaseAuth instance
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
 
-
 //stream the current user's authentication state
-
-//wacth login/log-out in real-time
-// Whenever auth state changes, all listeners get notified automatically
-
 final authStateProvider = StreamProvider<User?>((ref) {
   //get the FirebaseAuth instance from our provider above
   final auth = ref.watch(firebaseAuthProvider);
@@ -24,10 +18,8 @@ final authStateProvider = StreamProvider<User?>((ref) {
 });
 
 
-//create the Auth Service(business logic)
+//create the Auth Service (Business Logic)
 
-//where all the authentication method goes
-//think of this as your "Authentication Manager"
 
 class AuthService {
   final FirebaseAuth _auth;
@@ -46,7 +38,7 @@ class AuthService {
         password: password,
       );
     } on FirebaseAuthException catch (e) {
-      // Handle specific errors
+      //handle specific errors
       throw _handleAuthException(e);
     }
   }
@@ -54,7 +46,7 @@ class AuthService {
   //sign up
   Future<void> signUp(String email, String password, String username) async {
     try {
-      // Create user account
+      //create user account
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -96,7 +88,7 @@ class AuthService {
     await _auth.signOut();
   }
 
-  //Error handling
+  //error handling
   String _handleAuthException(FirebaseAuthException e) {
     switch (e.code) {
       case 'user-not-found':
@@ -115,12 +107,10 @@ class AuthService {
   }
 }
 
-//create provider for AuthService
-//creates ONE instance of AuthService that everyone can use
 
+//automatically gets the FirebaseAuth instance we defined earlier
 
 final authServiceProvider = Provider<AuthService>((ref) {
-
   //watch the firebaseAuthProvider to get FirebaseAuth instance
   final auth = ref.watch(firebaseAuthProvider);
 
@@ -129,8 +119,7 @@ final authServiceProvider = Provider<AuthService>((ref) {
 });
 
 
-//get current user data with username
-//this fetches the user's Firestore document which has username
+//user's Firestore document which has username
 
 final currentUserDataProvider = StreamProvider<DocumentSnapshot?>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -153,7 +142,7 @@ final currentUserDataProvider = StreamProvider<DocumentSnapshot?>((ref) {
 });
 
 
-//simple provider ~ to get just the username
+//simple provider to get just the username
 final currentUsernameProvider = Provider<String?>((ref) {
   final userDataState = ref.watch(currentUserDataProvider);
 
@@ -164,3 +153,4 @@ final currentUsernameProvider = Provider<String?>((ref) {
 
   return null;
 });
+
