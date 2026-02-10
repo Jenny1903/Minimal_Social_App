@@ -18,6 +18,9 @@ class PostsService {
 
   PostsService(this._firestore, this._userId, this._userEmail, this._username);
 
+  //make userId accessible for providers
+  String? get userId => _userId;
+
   CollectionReference get _postsCollection => _firestore.collection('Posts');
 
   //add a post
@@ -63,6 +66,7 @@ class PostsService {
       await postDoc.update({
         'likeCount': FieldValue.increment(-1),
       });
+
     } else {
       //LIKE: Create like document
       await likeDoc.set({
@@ -149,8 +153,22 @@ final postLikesProvider = StreamProvider.family<QuerySnapshot, String>((ref, pos
 });
 
 //check if user liked provider
-final hasUserLikedProvider = FutureProvider.family<bool, String>((ref, postId) async {
+final hasUserLikedProvider = StreamProvider.family<bool, String>((ref, postId) async* {
   final postsService = ref.watch(postsServiceProvider);
-  return postsService.hasUserLiked(postId);
-});
+  final userId = postsService.userId;
 
+  if (userId == null) {
+    yield false;
+    return;
+  }
+
+  // Stream the like document - updates in real-time!
+  await for (var snapshot in FirebaseFirestore.instance
+      .collection('Posts')
+      .doc(postId)
+      .collection('Likes')
+      .doc(userId)
+      .snapshots()) {
+    yield snapshot.exists;
+  }
+});
