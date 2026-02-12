@@ -7,7 +7,6 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-
 //posts service ~ Professional Structure
 
 class PostsService {
@@ -162,7 +161,7 @@ final hasUserLikedProvider = StreamProvider.family<bool, String>((ref, postId) a
     return;
   }
 
-  // Stream the like document - updates in real-time!
+  //stream the like document - updates in real-time!
   await for (var snapshot in FirebaseFirestore.instance
       .collection('Posts')
       .doc(postId)

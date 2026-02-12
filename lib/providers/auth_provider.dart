@@ -76,6 +76,7 @@ class AuthService {
         'email': userCredential.user!.email,
         'username': username,
         'bio': '',
+        'profilePicture': '',
         'createdAt': FieldValue.serverTimestamp(),
       });
 
