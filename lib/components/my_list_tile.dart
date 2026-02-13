@@ -26,7 +26,7 @@ class MyListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final postsService = ref.read(postsServiceProvider);
 
-    // Watch if current user liked this post
+    //Watch if current user liked this post
     final hasLiked = ref.watch(hasUserLikedProvider(postId));
 
     return Container(
@@ -46,11 +46,19 @@ class MyListTile extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User info row
+          //User info row
           Row(
             children: [
-              // Avatar
-              CircleAvatar(
+              //Avatar
+              profilePicture != null && profilePicture!.isNotEmpty
+                  ? ClipOval(
+                child: CachedImage(
+                  imageUrl: profilePicture,
+                  width: 36,
+                  height: 36,
+                ),
+              )
+                  : CircleAvatar(
                 radius: 18,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
                 child: Text(
@@ -62,9 +70,10 @@ class MyListTile extends ConsumerWidget {
                 ),
               ),
 
+
               const SizedBox(width: 10),
 
-              // Username and time
+              //username and time
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,6 +121,12 @@ class MyListTile extends ConsumerWidget {
             ),
           ),
 
+          //post images (if any)
+          if (imageUrls != null && imageUrls!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _buildPostImages(context),
+          ],
+
           const SizedBox(height: 12),
 
           // Action buttons
@@ -139,7 +154,7 @@ class MyListTile extends ConsumerWidget {
 
     return Row(
       children: [
-        // Heart icon
+        //heart icon
         GestureDetector(
           onTap: () async {
             try {
@@ -162,7 +177,7 @@ class MyListTile extends ConsumerWidget {
 
         const SizedBox(width: 4),
 
-        // Like count
+        //like count
         GestureDetector(
           onTap: () {
             if (likeCount > 0) {
