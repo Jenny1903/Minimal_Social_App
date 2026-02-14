@@ -1,9 +1,8 @@
+import 'package:social_app/components/who_liked_sheet.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/posts_provider.dart';
-import 'package:social_app/components/who_liked_sheet.dart';
-
 
 
 class MyListTile extends ConsumerWidget {
@@ -26,7 +25,7 @@ class MyListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final postsService = ref.read(postsServiceProvider);
 
-    //Watch if current user liked this post
+    // Watch if current user liked this post
     final hasLiked = ref.watch(hasUserLikedProvider(postId));
 
     return Container(
@@ -46,10 +45,10 @@ class MyListTile extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          //User info row
+          // User info row
           Row(
             children: [
-              //Avatar
+              // Avatar with profile picture
               profilePicture != null && profilePicture!.isNotEmpty
                   ? ClipOval(
                 child: CachedImage(
@@ -70,10 +69,9 @@ class MyListTile extends ConsumerWidget {
                 ),
               ),
 
-
               const SizedBox(width: 10),
 
-              //username and time
+              // Username and time
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +119,7 @@ class MyListTile extends ConsumerWidget {
             ),
           ),
 
-          //post images (if any)
+          // Post images (if any)
           if (imageUrls != null && imageUrls!.isNotEmpty) ...[
             const SizedBox(height: 12),
             _buildPostImages(context),
@@ -144,6 +142,7 @@ class MyListTile extends ConsumerWidget {
     );
   }
 
+//like button
   Widget _buildLikeButton(
       BuildContext context,
       WidgetRef ref,
@@ -154,7 +153,7 @@ class MyListTile extends ConsumerWidget {
 
     return Row(
       children: [
-        //heart icon
+        // Heart icon
         GestureDetector(
           onTap: () async {
             try {
@@ -177,7 +176,7 @@ class MyListTile extends ConsumerWidget {
 
         const SizedBox(width: 4),
 
-        //like count
+        //Like count ~ tappable to see who liked
         GestureDetector(
           onTap: () {
             if (likeCount > 0) {
@@ -185,8 +184,7 @@ class MyListTile extends ConsumerWidget {
                 context: context,
                 backgroundColor: Colors.transparent,
                 isScrollControlled: true,
-                builder: (context) => WhoLikedSheet(
-                    postId: postId),
+                builder: (context) => WhoLikedSheetV2(postId: postId),
               );
             }
           },
@@ -235,5 +233,44 @@ class MyListTile extends ConsumerWidget {
     } else {
       return 'Just now';
     }
+  }
+
+//build post images
+  Widget _buildPostImages(BuildContext context) {
+    if (imageUrls == null || imageUrls!.isEmpty) return const SizedBox();
+
+    // Single image
+    if (imageUrls!.length == 1) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: CachedImage(
+          imageUrl: imageUrls![0],
+          width: double.infinity,
+          height: 300,
+        ),
+      );
+    }
+
+    //Multiple images [ Grid layout  ]
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: imageUrls!.length == 2 ? 2 : 2,
+          crossAxisSpacing: 2,
+          mainAxisSpacing: 2,
+          childAspectRatio: 1,
+        ),
+        itemCount: imageUrls!.length.clamp(0, 4),
+        itemBuilder: (context, index) {
+          return CachedImage(
+            imageUrl: imageUrls![index],
+            fit: BoxFit.cover,
+          );
+        },
+      ),
+    );
   }
 }
