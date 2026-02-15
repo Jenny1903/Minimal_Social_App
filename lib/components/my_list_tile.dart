@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/posts_provider.dart';
+import 'package:social_app/services/image_service.dart';
 
 
 class MyListTile extends ConsumerWidget {
@@ -10,6 +11,8 @@ class MyListTile extends ConsumerWidget {
   final String title;
   final String username;
   final Timestamp? timestamp;
+  final String? profilePicture;
+  final List<String>? imageUrls;
   final int likeCount;
 
   const MyListTile({
@@ -17,6 +20,8 @@ class MyListTile extends ConsumerWidget {
     required this.postId,
     required this.title,
     required this.username,
+    this.profilePicture,
+    this.imageUrls,
     required this.likeCount,
     this.timestamp,
   });
@@ -184,7 +189,7 @@ class MyListTile extends ConsumerWidget {
                 context: context,
                 backgroundColor: Colors.transparent,
                 isScrollControlled: true,
-                builder: (context) => WhoLikedSheetV2(postId: postId),
+                builder: (context) => WhoLikedSheet(postId: postId),
               );
             }
           },

@@ -208,6 +208,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                             postId: postId,
                             title: message,
                             username: username,
+                            profilePicture: postData['profilePicture'],
+                            imageUrls: postData['images'] != null
+                                ? List<String>.from(postData['images'])
+                                : null,
                             timestamp: timestamp,
                             likeCount: likeCount,
                           ),
