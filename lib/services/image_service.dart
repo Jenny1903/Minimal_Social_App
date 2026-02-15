@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ImageService {
   final ImagePicker _picker = ImagePicker();
@@ -30,7 +31,7 @@ class ImageService {
 
     if (image == null) return null;
 
-    // Crop to square
+    //crop to square
     return await _cropImageSquare(File(image.path));
   }
 
