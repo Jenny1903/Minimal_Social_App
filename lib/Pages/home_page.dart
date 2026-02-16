@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,7 @@ import 'package:social_app/components/my_list_tile.dart';
 import 'package:social_app/components/my_post_button.dart';
 import 'package:social_app/components/my_textfield.dart';
 import 'package:social_app/providers/posts_provider.dart';
-
+import 'package:social_app/services/image_service.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -17,8 +18,14 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  //firestore access
   final TextEditingController newPostController = TextEditingController();
+  final ImageService _imageService = ImageService();
+
+  //selected images for the post
+  List<File> selectedImages = [];
+
+  //loading state
+  bool isPosting = false;
 
   @override
   void dispose() {
@@ -26,24 +33,79 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
+  //pick images for post
+  Future<void> pickImages() async {
+    try {
+      final images = await _imageService.pickPostImages();
 
-  //POST MESSAGE
+      if (images.isNotEmpty) {
+        setState(() {
+          selectedImages = images;
+        });
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${images.length} image(s) selected'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking images: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+ //post message with images
   Future<void> postMessage() async {
-    // Only post if there's something in the textfield
-    if (newPostController.text.isEmpty) return;
+    // Check if there's text or images
+    if (newPostController.text.isEmpty && selectedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please write something or add images'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isPosting = true);
 
     try {
-
       final postsService = ref.read(postsServiceProvider);
 
-      //add the post
-      await postsService.addPost(newPostController.text);
+      List<String> imageUrls = [];
 
-      //clear the textfield
+      //step:1 ~ Upload images if any selected
+      if (selectedImages.isNotEmpty) {
+
+        //generate temporary post ID for image naming
+        final tempPostId = DateTime.now().millisecondsSinceEpoch.toString();
+
+        print('Uploading ${selectedImages.length} images...');
+        imageUrls = await _imageService.uploadPostImages(
+          selectedImages,
+          tempPostId,
+        );
+        print('Images uploaded: $imageUrls');
+      }
+
+      //step:2 ~ create post with image URLs
+      await postsService.addPost(
+        newPostController.text.trim(),
+        imageUrls: imageUrls.isEmpty ? null : imageUrls,
+      );
+
+      //step:3 ~ clear everything
       newPostController.clear();
+      setState(() {
+        selectedImages = [];
+      });
 
-      //show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -52,9 +114,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         );
       }
-
     } catch (e) {
-      //handle errors
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -63,14 +123,22 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         );
       }
+    } finally {
+      if (mounted) {
+        setState(() => isPosting = false);
+      }
     }
+  }
+
+  //remove selected images
+  void removeImage(int index) {
+    setState(() {
+      selectedImages.removeAt(index);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-
-    //WATCH the posts stream using Riverpod
-
     final postsStream = ref.watch(postsStreamProvider);
 
     return Scaffold(
@@ -86,7 +154,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
       body: Stack(
         children: [
-          //lottie background for entire screen
+          //lottie background
           Positioned.fill(
             child: Opacity(
               opacity: 0.1,
@@ -97,10 +165,11 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
 
-          //main content
+          // Main content
           Column(
             children: [
-              //post input
+
+              //post input section
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -113,52 +182,93 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ],
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    //user avatar
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                      child: Icon(
-                        Icons.person,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                        size: 20,
-                      ),
+                    //input row
+                    Row(
+                      children: [
+                        //user avatar
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          child: Icon(
+                            Icons.person,
+                            color: Theme.of(context).colorScheme.inversePrimary,
+                            size: 20,
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        //textfield
+                        Expanded(
+                          child: MyTextfield(
+                            hintText: "Say something",
+                            obscureText: false,
+                            controller: newPostController,
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        //image picker button
+                        IconButton(
+                          onPressed: isPosting ? null : pickImages,
+                          icon: Icon(
+                            Icons.image_outlined,
+                            color: selectedImages.isNotEmpty
+                                ? Colors.blue
+                                : Theme.of(context).colorScheme.secondary,
+                          ),
+                          tooltip: 'Add images',
+                        ),
+
+                        //post button
+                        PostButton(
+                          onTap: isPosting ? null : postMessage,
+                        ),
+                      ],
                     ),
 
-                    const SizedBox(width: 12),
+                    //selected images preview
+                    if (selectedImages.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildSelectedImagesPreview(),
+                    ],
 
-                    //textfield
-                    Expanded(
-                      child: MyTextfield(
-                        hintText: "Say something",
-                        obscureText: false,
-                        controller: newPostController,
+                    //loading indicator
+                    if (isPosting) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Uploading...',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    //post button
-                    PostButton(
-                      onTap: postMessage,
-                    )
+                    ],
                   ],
                 ),
               ),
 
               const SizedBox(height: 10),
 
-              //posts list
-
+              //post list
               Expanded(
                 child: postsStream.when(
-
-                  //DATA
                   data: (snapshot) {
                     final posts = snapshot.docs;
 
-                    //no posts - Show empty state
                     if (posts.isEmpty) {
                       return Center(
                         child: Column(
@@ -186,21 +296,24 @@ class _HomePageState extends ConsumerState<HomePage> {
                       );
                     }
 
-                    //display posts
                     return ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       itemCount: posts.length,
                       itemBuilder: (context, index) {
-                        // Get individual post
                         final post = posts[index];
                         final postData = post.data() as Map<String, dynamic>;
 
-                        // Get data from each post
                         String postId = post.id;
                         String message = postData['PostMessage'] ?? '';
                         String username = postData['username'] ?? 'Anonymous';
                         Timestamp? timestamp = postData['TimeStamp'];
                         int likeCount = postData['likeCount'] ?? 0;
+
+                        //get images and profile picture
+                        List<String>? imageUrls = postData['images'] != null
+                            ? List<String>.from(postData['images'])
+                            : null;
+                        String? profilePicture = postData['profilePicture'];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
@@ -208,10 +321,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                             postId: postId,
                             title: message,
                             username: username,
-                            profilePicture: postData['profilePicture'],
-                            imageUrls: postData['images'] != null
-                                ? List<String>.from(postData['images'])
-                                : null,
+                            profilePicture: profilePicture,
+                            imageUrls: imageUrls,
                             timestamp: timestamp,
                             likeCount: likeCount,
                           ),
@@ -219,15 +330,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                       },
                     );
                   },
-
-                  //LOADING - Waiting for posts
                   loading: () => Center(
                     child: CircularProgressIndicator(
                       color: Theme.of(context).colorScheme.inversePrimary,
                     ),
                   ),
-
-                  //ERROR - Something went wrong
                   error: (error, stackTrace) => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -251,14 +358,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(color: Colors.red),
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Retry by invalidating the provider
-                            ref.invalidate(postsStreamProvider);
-                          },
-                          child: const Text('Retry'),
-                        ),
                       ],
                     ),
                   ),
@@ -267,6 +366,57 @@ class _HomePageState extends ConsumerState<HomePage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  //build selected image preview
+  Widget _buildSelectedImagesPreview() {
+    return Container(
+      height: 80,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: selectedImages.length,
+        itemBuilder: (context, index) {
+          return Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Stack(
+              children: [
+                // Image preview
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    selectedImages[index],
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+                //remove button
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () => removeImage(index),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
