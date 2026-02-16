@@ -23,7 +23,7 @@ class PostsService {
   CollectionReference get _postsCollection => _firestore.collection('Posts');
 
   //add a post
-  Future<void> addPost(String message) async {
+  Future<void> addPost(String message, {List<String>? imageUrls}) async {
     if (_userId == null) {
       throw Exception('User must be logged in to post');
     }
