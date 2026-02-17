@@ -76,7 +76,7 @@ class ImageService {
   //upload profile picture
   Future<String> uploadProfilePicture(File imageFile, String userId) async {
     try {
-      // Create unique file name
+      //create unique file name
       final fileName = 'profile_$userId.jpg';
       final ref = _storage.ref().child('profile_pictures/$fileName');
 
@@ -106,25 +106,44 @@ class ImageService {
     }
   }
 
-  //upload post image
+  //upload post images
   Future<List<String>> uploadPostImages(List<File> imageFiles, String postId) async {
     List<String> downloadUrls = [];
 
     for (int i = 0; i < imageFiles.length; i++) {
       try {
         final fileName = 'post_${postId}_image_$i.jpg';
-        final ref = _storage.ref().child('post_images/$fileName');
 
-        await ref.putFile(imageFiles[i]);
-        final url = await ref.getDownloadURL();
+        // Create storage reference
+        final storageRef = _storage.ref();
+        final imageRef = storageRef.child('post_images/$fileName');
+
+        print('Uploading: $fileName');
+        print('Path: post_images/$fileName');
+        print('File size: ${await imageFiles[i].length()} bytes');
+
+        // Upload file
+        final uploadTask = imageRef.putFile(imageFiles[i]);
+
+        // Wait for upload
+        final snapshot = await uploadTask;
+        print('Upload complete: ${snapshot.state}');
+
+        // Get download URL
+        final url = await imageRef.getDownloadURL();
+        print('Got URL: $url');
+
         downloadUrls.add(url);
       } catch (e) {
         print('Error uploading image $i: $e');
+        print('Stack trace: ${StackTrace.current}');
+        // Continue with other images even if one fails
       }
     }
 
     return downloadUrls;
   }
+
 
   //delete image
   Future<void> deleteImage(String imageUrl) async {
@@ -214,8 +233,6 @@ class ImageService {
 
 //catched image widget
 //displays images with loading and error states
-
-
 class CachedImage extends StatelessWidget {
   final String? imageUrl;
   final double? width;
