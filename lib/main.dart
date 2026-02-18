@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/Pages/home_page.dart';
@@ -20,12 +21,17 @@ void main() async {
   final user = FirebaseAuth.instance.currentUser;
   print('App starting - Current user: ${user?.email ?? 'No user'}');
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
-}
+    //test Firebase Storage
+    try {
+      final storage = FirebaseStorage.instance;
+      print('✅ Firebase Storage initialized');
+      print('   Bucket: ${storage.bucket}');
+    } catch (e) {
+      print('❌ Firebase Storage error: $e');
+    }
+
+    runApp(const ProviderScope(child: MyApp()));
+  }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
