@@ -92,6 +92,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           tempPostId,
         );
         print('Images uploaded: $imageUrls');
+        print('Creating post with ${imageUrls.length} images');
+        print('Image URLs: $imageUrls');
+
       }
 
       //step:2 ~ create post with image URLs
@@ -99,6 +102,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         newPostController.text.trim(),
         imageUrls: imageUrls.isEmpty ? null : imageUrls,
       );
+
+      print('Post created successfully');
 
       //step:3 ~ clear everything
       newPostController.clear();
@@ -382,7 +387,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             margin: const EdgeInsets.only(right: 8),
             child: Stack(
               children: [
-                // Image preview
+                //Image preview
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.file(
