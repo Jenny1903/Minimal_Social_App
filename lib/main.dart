@@ -24,10 +24,10 @@ void main() async {
     //test Firebase Storage
     try {
       final storage = FirebaseStorage.instance;
-      print('✅ Firebase Storage initialized');
+      print('Firebase Storage initialized');
       print('   Bucket: ${storage.bucket}');
     } catch (e) {
-      print('❌ Firebase Storage error: $e');
+      print('Firebase Storage error: $e');
     }
 
     runApp(const ProviderScope(child: MyApp()));
