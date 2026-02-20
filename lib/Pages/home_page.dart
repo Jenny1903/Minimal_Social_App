@@ -92,12 +92,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           tempPostId,
         );
         print('Images uploaded: $imageUrls');
-        print('Creating post with ${imageUrls.length} images');
-        print('Image URLs: $imageUrls');
-
       }
-
       //step:2 ~ create post with image URLs
+      print('Creating post with ${imageUrls.length} images');
+      print('Image URLs: $imageUrls');
+
       await postsService.addPost(
         newPostController.text.trim(),
         imageUrls: imageUrls.isEmpty ? null : imageUrls,

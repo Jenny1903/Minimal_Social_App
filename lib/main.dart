@@ -25,7 +25,7 @@ void main() async {
     try {
       final storage = FirebaseStorage.instance;
       print('Firebase Storage initialized');
-      print('   Bucket: ${storage.bucket}');
+      print(' Bucket: ${storage.bucket}');
     } catch (e) {
       print('Firebase Storage error: $e');
     }
