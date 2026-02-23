@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/posts_provider.dart';
 import 'package:social_app/services/image_service.dart';
 
+import 'comments_sheet.dart';
+
 
 class MyListTile extends ConsumerWidget {
   final String postId;
@@ -14,6 +16,7 @@ class MyListTile extends ConsumerWidget {
   final String? profilePicture;
   final List<String>? imageUrls;
   final int likeCount;
+  final int commentCount;
 
   const MyListTile({
     super.key,
@@ -23,6 +26,7 @@ class MyListTile extends ConsumerWidget {
     this.profilePicture,
     this.imageUrls,
     required this.likeCount,
+    required this.commentCount,
     this.timestamp,
   });
 
@@ -137,10 +141,44 @@ class MyListTile extends ConsumerWidget {
             children: [
               _buildLikeButton(context, ref, hasLiked, postsService),
               const SizedBox(width: 20),
-              _buildActionButton(context, Icons.chat_bubble_outline, "Comment"),
+              _buildCommentButton(context),
               const SizedBox(width: 20),
               _buildActionButton(context, Icons.share_outlined, "Share"),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  //comment button
+  Widget _buildCommentButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => CommentsSheet(postId: postId),
+        );
+      },
+      child: Row(
+        children: [
+          Icon(
+            Icons.chat_bubble_outline,
+            size: 18,
+            color: Theme.of(context).colorScheme.secondary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            commentCount > 0 ? '$commentCount' : 'Comment',
+            style: TextStyle(
+              fontSize: 13,
+              color: commentCount > 0
+                  ? Theme.of(context).colorScheme.inversePrimary
+                  : Theme.of(context).colorScheme.secondary,
+              fontWeight: commentCount > 0 ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
         ],
       ),
