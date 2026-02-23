@@ -312,6 +312,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         String username = postData['username'] ?? 'Anonymous';
                         Timestamp? timestamp = postData['TimeStamp'];
                         int likeCount = postData['likeCount'] ?? 0;
+                        int commentCount = postData['commentCount'] ?? 0;
 
                         //get images and profile picture
                         List<String>? imageUrls = postData['images'] != null
@@ -329,6 +330,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             imageUrls: imageUrls,
                             timestamp: timestamp,
                             likeCount: likeCount,
+                            commentCount: commentCount,
                           ),
                         );
                       },
