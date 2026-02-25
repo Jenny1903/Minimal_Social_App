@@ -11,7 +11,6 @@ import 'package:social_app/theme/dark_mode.dart';
 import 'package:social_app/theme/light_mode.dart';
 import 'package:social_app/firebase_options.dart';
 import 'package:social_app/auth/login_or_register.dart';
-import 'package:social_app/components/my_drawer.dart';
 import 'package:social_app/Pages/loading_page.dart';
 
 void main() async {
