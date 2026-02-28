@@ -12,6 +12,7 @@ import 'package:social_app/theme/light_mode.dart';
 import 'package:social_app/firebase_options.dart';
 import 'package:social_app/auth/login_or_register.dart';
 import 'package:social_app/Pages/loading_page.dart';
+import 'package:social_app/routes/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,3 +57,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
