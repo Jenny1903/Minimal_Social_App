@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/auth_provider.dart';
 import 'package:social_app/providers/posts_provider.dart';
+import 'package:social_app/components/who_liked_sheet.dart';
 
-class MyListTile extends ConsumerWidget {
+class MyListTile extends ConsumerStatefulWidget {
   final String postId;
   final String title;
   final String username;
@@ -13,6 +14,7 @@ class MyListTile extends ConsumerWidget {
   final Timestamp? timestamp;
   final int likeCount;
   final int commentCount;
+  final VoidCallback? onCommentTap;
 
   const MyListTile({
     super.key,
@@ -24,29 +26,116 @@ class MyListTile extends ConsumerWidget {
     this.timestamp,
     required this.likeCount,
     required this.commentCount,
+    this.onCommentTap,
   });
 
-  String _formatTimestamp(Timestamp? timestamp) {
-    if (timestamp == null) return '';
+  @override
+  ConsumerState<MyListTile> createState() => _MyListTileState();
+}
 
-    final DateTime dateTime = timestamp.toDate();
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
+class _MyListTileState extends ConsumerState<MyListTile> {
+  bool isLiked = false;
+  bool isLoading = false;
 
-    if (difference.inDays > 7) {
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLiked();
+  }
+
+  Future<void> _checkIfLiked() async {
+    final currentUser = ref.read(authStateProvider).value;
+    if (currentUser == null) return;
+
+    try {
+      final likeDoc = await FirebaseFirestore.instance
+          .collection('Posts')
+          .doc(widget.postId)
+          .collection('Likes')
+          .doc(currentUser.uid)
+          .get();
+
+      if (mounted) {
+        setState(() {
+          isLiked = likeDoc.exists;
+        });
+      }
+    } catch (e) {
+      print('Error checking like status: $e');
     }
   }
 
-  Future<void> _deletePost(BuildContext context, WidgetRef ref) async {
+  Future<void> _toggleLike() async {
+    final currentUser = ref.read(authStateProvider).value;
+    if (currentUser == null) return;
+
+    setState(() => isLoading = true);
+
+    try {
+      final postRef = FirebaseFirestore.instance.collection('Posts').doc(widget.postId);
+      final likeRef = postRef.collection('Likes').doc(currentUser.uid);
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(currentUser.uid)
+          .get();
+
+      final userData = userDoc.data() as Map<String, dynamic>?;
+      final username = userData?['username'] ?? 'Anonymous';
+
+      if (isLiked) {
+        // Unlike
+        await likeRef.delete();
+        await postRef.update({
+          'likeCount': FieldValue.increment(-1),
+        });
+
+        if (mounted) {
+          setState(() => isLiked = false);
+        }
+      } else {
+        // Like
+        await likeRef.set({
+          'userId': currentUser.uid,
+          'userEmail': currentUser.email ?? '',
+          'username': username,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        await postRef.update({
+          'likeCount': FieldValue.increment(1),
+        });
+
+        if (mounted) {
+          setState(() => isLiked = true);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  void _showWhoLiked() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => WhoLikedSheet(postId: widget.postId),
+    );
+  }
+
+  Future<void> _deletePost() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -69,9 +158,9 @@ class MyListTile extends ConsumerWidget {
     if (confirm == true) {
       try {
         final postsService = ref.read(postsServiceProvider);
-        await postsService.deletePost(postId);
+        await postsService.deletePost(widget.postId);
 
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Post deleted'),
@@ -80,7 +169,7 @@ class MyListTile extends ConsumerWidget {
           );
         }
       } catch (e) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: $e'),
@@ -92,8 +181,8 @@ class MyListTile extends ConsumerWidget {
     }
   }
 
-  Future<void> _editPost(BuildContext context, WidgetRef ref) async {
-    final TextEditingController controller = TextEditingController(text: title);
+  Future<void> _editPost() async {
+    final TextEditingController controller = TextEditingController(text: widget.title);
 
     final newMessage = await showDialog<String>(
       context: context,
@@ -132,12 +221,12 @@ class MyListTile extends ConsumerWidget {
       ),
     );
 
-    if (newMessage != null && newMessage != title) {
+    if (newMessage != null && newMessage != widget.title) {
       try {
         final postsService = ref.read(postsServiceProvider);
-        await postsService.updatePost(postId, newMessage);
+        await postsService.updatePost(widget.postId, newMessage);
 
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Post updated'),
@@ -146,7 +235,7 @@ class MyListTile extends ConsumerWidget {
           );
         }
       } catch (e) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: $e'),
@@ -158,13 +247,32 @@ class MyListTile extends ConsumerWidget {
     }
   }
 
+  String _formatTimestamp(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+
+    final DateTime dateTime = timestamp.toDate();
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 7) {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(authStateProvider).value;
 
-    //get post owner's userId from Firestore
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('Posts').doc(postId).get(),
+      future: FirebaseFirestore.instance.collection('Posts').doc(widget.postId).get(),
       builder: (context, snapshot) {
         String? postOwnerId;
         if (snapshot.hasData && snapshot.data!.exists) {
@@ -186,19 +294,19 @@ class MyListTile extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              //header: User info,timestamp,menu
+              //header: User info + timestamp + menu
               Row(
                 children: [
-                  //profile Picture
+                  // Profile Picture
                   CircleAvatar(
                     radius: 20,
                     backgroundColor: Theme.of(context).colorScheme.secondary,
-                    backgroundImage: profilePicture != null
-                        ? NetworkImage(profilePicture!)
+                    backgroundImage: widget.profilePicture != null
+                        ? NetworkImage(widget.profilePicture!)
                         : null,
-                    child: profilePicture == null
+                    child: widget.profilePicture == null
                         ? Text(
-                      username[0].toUpperCase(),
+                      widget.username[0].toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -215,7 +323,7 @@ class MyListTile extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '@$username',
+                          '@${widget.username}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -223,7 +331,7 @@ class MyListTile extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          _formatTimestamp(timestamp),
+                          _formatTimestamp(widget.timestamp),
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.secondary,
@@ -254,10 +362,9 @@ class MyListTile extends ConsumerWidget {
                             ],
                           ),
                           onTap: () {
-                            // Delay to let popup close first
                             Future.delayed(
                               const Duration(milliseconds: 100),
-                                  () => _editPost(context, ref),
+                                  () => _editPost(),
                             );
                           },
                         ),
@@ -277,10 +384,9 @@ class MyListTile extends ConsumerWidget {
                             ],
                           ),
                           onTap: () {
-                            // Delay to let popup close first
                             Future.delayed(
                               const Duration(milliseconds: 100),
-                                  () => _deletePost(context, ref),
+                                  () => _deletePost(),
                             );
                           },
                         ),
@@ -291,52 +397,106 @@ class MyListTile extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // Post content
-              if (title.isNotEmpty)
+              //post content
+              if (widget.title.isNotEmpty)
                 Text(
-                  title,
+                  widget.title,
                   style: TextStyle(
                     fontSize: 15,
                     color: Theme.of(context).colorScheme.inversePrimary,
                   ),
                 ),
 
-              // Images (if any)
-              if (imageUrls != null && imageUrls!.isNotEmpty) ...[
+              //images(if any)
+              if (widget.imageUrls != null && widget.imageUrls!.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 _buildImageGrid(context),
               ],
 
               const SizedBox(height: 12),
 
-              // Action bar: Like & Comment counts
+              //action buttons: Like, Comment, Share
               Row(
                 children: [
-                  Icon(
-                    Icons.favorite_border,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    likeCount.toString(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.secondary,
+                  // Like button
+                  InkWell(
+                    onTap: isLoading ? null : _toggleLike,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            size: 20,
+                            color: isLiked ? Colors.red : Theme.of(context).colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: widget.likeCount > 0 ? _showWhoLiked : null,
+                            child: Text(
+                              widget.likeCount.toString(),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: widget.likeCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.chat_bubble_outline,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.secondary,
+
+                  const SizedBox(width: 8),
+
+                  //comment button
+                  InkWell(
+                    onTap: widget.onCommentTap,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.chat_bubble_outline,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            widget.commentCount.toString(),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    commentCount.toString(),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.secondary,
+
+                  const Spacer(),
+
+                  //share button
+                  InkWell(
+                    onTap: () {
+                      // TODO: Implement share functionality
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Share feature coming soon!'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Icon(
+                        Icons.share_outlined,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
                     ),
                   ),
                 ],
@@ -349,13 +509,15 @@ class MyListTile extends ConsumerWidget {
   }
 
   Widget _buildImageGrid(BuildContext context) {
-    if (imageUrls == null || imageUrls!.isEmpty) return const SizedBox.shrink();
+    if (widget.imageUrls == null || widget.imageUrls!.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-    if (imageUrls!.length == 1) {
+    if (widget.imageUrls!.length == 1) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Image.network(
-          imageUrls![0],
+          widget.imageUrls![0],
           width: double.infinity,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) => Container(
@@ -369,7 +531,7 @@ class MyListTile extends ConsumerWidget {
       );
     }
 
-    //multiple images grid
+    // Multiple images grid
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -378,17 +540,17 @@ class MyListTile extends ConsumerWidget {
         crossAxisSpacing: 8,
         mainAxisSpacing: 8,
       ),
-      itemCount: imageUrls!.length > 4 ? 4 : imageUrls!.length,
+      itemCount: widget.imageUrls!.length > 4 ? 4 : widget.imageUrls!.length,
       itemBuilder: (context, index) {
-        if (index == 3 && imageUrls!.length > 4) {
-          // Show "+X more" overlay on 4th image
+        if (index == 3 && widget.imageUrls!.length > 4) {
+          //show "+X more" overlay on 4th image
           return Stack(
             fit: StackFit.expand,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.network(
-                  imageUrls![index],
+                  widget.imageUrls![index],
                   fit: BoxFit.cover,
                 ),
               ),
@@ -399,7 +561,7 @@ class MyListTile extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    '+${imageUrls!.length - 3}',
+                    '+${widget.imageUrls!.length - 3}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -415,7 +577,7 @@ class MyListTile extends ConsumerWidget {
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Image.network(
-            imageUrls![index],
+            widget.imageUrls![index],
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) => Container(
               color: Colors.grey[300],
