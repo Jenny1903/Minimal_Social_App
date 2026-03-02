@@ -161,3 +161,13 @@ final userPostsStreamProvider = StreamProvider.family<QuerySnapshot, String>((re
   final postsService = ref.watch(postsServiceProvider);
   return postsService.getUserPostsStream(userId);
 });
+
+//stream provider for post likes (for WhoLikedSheet)
+final postLikesProvider = StreamProvider.family<QuerySnapshot, String>((ref, postId) {
+  return FirebaseFirestore.instance
+      .collection('Posts')
+      .doc(postId)
+      .collection('Likes')
+      .orderBy('timestamp', descending: true)
+      .snapshots();
+});
