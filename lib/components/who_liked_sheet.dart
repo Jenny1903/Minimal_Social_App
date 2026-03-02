@@ -97,7 +97,7 @@ class WhoLikedSheet extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // List of users
+              //list of users
               Flexible(
                 child: likes.isEmpty
                     ? _buildEmptyState(context)
@@ -182,7 +182,7 @@ class WhoLikedSheet extends ConsumerWidget {
 
                 const SizedBox(width: 12),
 
-                // User info
+                //user info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,7 +208,7 @@ class WhoLikedSheet extends ConsumerWidget {
                   ),
                 ),
 
-                // Heart icon
+                //heart icon
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(

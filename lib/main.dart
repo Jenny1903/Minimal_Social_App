@@ -21,17 +21,17 @@ void main() async {
   final user = FirebaseAuth.instance.currentUser;
   print('App starting - Current user: ${user?.email ?? 'No user'}');
 
-    //test Firebase Storage
-    try {
-      final storage = FirebaseStorage.instance;
-      print('Firebase Storage initialized');
-      print(' Bucket: ${storage.bucket}');
-    } catch (e) {
-      print('Firebase Storage error: $e');
-    }
-
-    runApp(const ProviderScope(child: MyApp()));
+  //test Firebase Storage
+  try {
+    final storage = FirebaseStorage.instance;
+    print(' Firebase Storage initialized');
+    print(' Bucket: ${storage.bucket}');
+  } catch (e) {
+    print(' Firebase Storage error: $e');
   }
+
+  runApp(const ProviderScope(child: MyApp()));
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -46,6 +46,7 @@ class MyApp extends StatelessWidget {
       theme: lightMode,
       darkTheme: darkMode,
 
+
       routes: {
         '/loading': (context) => const LoadingPage(),
         '/auth': (context) => const AuthPage(),
@@ -53,9 +54,12 @@ class MyApp extends StatelessWidget {
         '/home_page': (context) => HomePage(),
         '/profile_page': (context) => ProfilePage(),
         '/user_page': (context) => const UsersPage(),
+
+
+        ...AppRoutes.getRoutes(),
       },
+
+      onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }
 }
-
-
