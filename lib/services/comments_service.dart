@@ -25,7 +25,7 @@ class CommentsService {
     }
 
     try {
-      print('🔵 Adding comment to Firestore...');
+      print('Adding comment to Firestore...');
 
       //add comment to subcollection
       await _firestore

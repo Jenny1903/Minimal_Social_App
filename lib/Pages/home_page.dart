@@ -65,7 +65,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   //post message with images
   Future<void> postMessage() async {
-    // Check if there's text or images
+    //check if there's text or images
     if (newPostController.text.isEmpty && selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -156,7 +156,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Consumer(
-        // ✅ FIX: Wrap entire sheet in Consumer to access ref
+
         builder: (context, ref, child) {
           final TextEditingController commentController = TextEditingController();
 
@@ -341,7 +341,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
 
-                  // ✅ FIXED: Comment input with proper ref access
+
                   Container(
                     padding: EdgeInsets.only(
                       left: 16,
@@ -385,25 +385,25 @@ class _HomePageState extends ConsumerState<HomePage> {
                         const SizedBox(width: 8),
                         IconButton(
                           onPressed: () async {
-                            print('🔵 Send button pressed!');
-                            print('🔵 Comment text: "${commentController.text}"');
+                            print('Send button pressed!');
+                            print('Comment text: "${commentController.text}"');
 
                             if (commentController.text.trim().isEmpty) {
-                              print('❌ Comment is empty');
+                              print('Comment is empty');
                               return;
                             }
 
                             try {
-                              print('🔵 Getting commentsService...');
+                              print('Getting commentsService...');
                               final commentsService = ref.read(commentsServiceProvider);
 
-                              print('🔵 Adding comment to postId: $postId');
+                              print('Adding comment to postId: $postId');
                               await commentsService.addComment(
                                 postId,
                                 commentController.text.trim(),
                               );
 
-                              print('✅ Comment added successfully!');
+                              print('Comment added successfully!');
                               commentController.clear();
 
                               if (context.mounted) {
@@ -416,7 +416,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 );
                               }
                             } catch (e) {
-                              print('❌ Error adding comment: $e');
+                              print('Error adding comment: $e');
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
