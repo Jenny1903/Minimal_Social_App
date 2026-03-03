@@ -151,265 +151,295 @@ class _HomePageState extends ConsumerState<HomePage> {
       String postMessage,
       String username,
       ) async {
-    final TextEditingController commentController = TextEditingController();
-    final commentsService = ref.read(commentsServiceProvider);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+      builder: (context) => Consumer(
+        // ✅ FIX: Wrap entire sheet in Consumer to access ref
+        builder: (context, ref, child) {
+          final TextEditingController commentController = TextEditingController();
 
-              //post preview
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.05),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+          return DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) => Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 16,
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          child: Text(
-                            username[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+
+                  //post preview
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.05),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                         ),
-                        const SizedBox(width: 8),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Theme.of(context).colorScheme.secondary,
+                              child: Text(
+                                username[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '@$username',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.inversePrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (postMessage.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            postMessage,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.inversePrimary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  //comments header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    child: Row(
+                      children: [
                         Text(
-                          '@$username',
+                          'Comments',
                           style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.inversePrimary,
                           ),
                         ),
-                      ],
-                    ),
-                    if (postMessage.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        postMessage,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.inversePrimary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              //comments header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Row(
-                  children: [
-                    Text(
-                      'Comments',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                      ),
-                    ),
-                    const Spacer(),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final commentsAsync = ref.watch(commentsStreamProvider(postId));
-                        return commentsAsync.when(
-                          data: (snapshot) => Text(
-                            '${snapshot.docs.length}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                          ),
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              //comments list
-              Expanded(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final commentsAsync = ref.watch(commentsStreamProvider(postId));
-
-                    return commentsAsync.when(
-                      data: (snapshot) {
-                        if (snapshot.docs.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.chat_bubble_outline,
-                                  size: 60,
-                                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                        const Spacer(),
+                        Consumer(
+                          builder: (context, ref, child) {
+                            final commentsAsync = ref.watch(commentsStreamProvider(postId));
+                            return commentsAsync.when(
+                              data: (snapshot) => Text(
+                                '${snapshot.docs.length}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).colorScheme.secondary,
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No comments yet',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Theme.of(context).colorScheme.secondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Be the first to comment!',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        return ListView.builder(
-                          controller: scrollController,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: snapshot.docs.length,
-                          itemBuilder: (context, index) {
-                            final comment = snapshot.docs[index];
-                            final commentData = comment.data() as Map<String, dynamic>;
-                            final currentUser = ref.watch(authStateProvider).value;
-                            final isOwnComment = currentUser?.uid == commentData['userId'];
-
-                            return _buildCommentItem(
-                              context,
-                              ref,
-                              commentData,
-                              comment.id,
-                              postId,
-                              isOwnComment,
+                              ),
+                              loading: () => const SizedBox.shrink(),
+                              error: (_, __) => const SizedBox.shrink(),
                             );
                           },
-                        );
-                      },
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (error, _) => Center(
-                        child: Text(
-                          'Error loading comments',
-                          style: TextStyle(color: Theme.of(context).colorScheme.secondary),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Comment input
-              Container(
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 12,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  border: Border(
-                    top: BorderSide(
-                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      ],
                     ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: commentController,
-                        decoration: InputDecoration(
-                          hintText: 'Add a comment...',
-                          hintStyle: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
+
+                  //comments list
+                  Expanded(
+                    child: Consumer(
+                      builder: (context, ref, child) {
+                        final commentsAsync = ref.watch(commentsStreamProvider(postId));
+
+                        return commentsAsync.when(
+                          data: (snapshot) {
+                            if (snapshot.docs.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.chat_bubble_outline,
+                                      size: 60,
+                                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No comments yet',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Theme.of(context).colorScheme.secondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Be the first to comment!',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+
+                            return ListView.builder(
+                              controller: scrollController,
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: snapshot.docs.length,
+                              itemBuilder: (context, index) {
+                                final comment = snapshot.docs[index];
+                                final commentData = comment.data() as Map<String, dynamic>;
+                                final currentUser = ref.watch(authStateProvider).value;
+                                final isOwnComment = currentUser?.uid == commentData['userId'];
+
+                                return _buildCommentItem(
+                                  context,
+                                  ref,
+                                  commentData,
+                                  comment.id,
+                                  postId,
+                                  isOwnComment,
+                                );
+                              },
+                            );
+                          },
+                          loading: () => const Center(child: CircularProgressIndicator()),
+                          error: (error, _) => Center(
+                            child: Text(
+                              'Error loading comments',
+                              style: TextStyle(color: Theme.of(context).colorScheme.secondary),
+                            ),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(25),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
+                        );
+                      },
+                    ),
+                  ),
+
+                  // ✅ FIXED: Comment input with proper ref access
+                  Container(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 12,
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      border: Border(
+                        top: BorderSide(
+                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: commentController,
+                            decoration: InputDecoration(
+                              hintText: 'Add a comment...',
+                              hintStyle: TextStyle(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                            ),
+                            maxLines: null,
+                            textCapitalization: TextCapitalization.sentences,
                           ),
                         ),
-                        maxLines: null,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () async {
-                        if (commentController.text.trim().isEmpty) return;
+                        const SizedBox(width: 8),
+                        IconButton(
+                          onPressed: () async {
+                            print('🔵 Send button pressed!');
+                            print('🔵 Comment text: "${commentController.text}"');
 
-                        try {
-                          await commentsService.addComment(
-                            postId,
-                            commentController.text.trim(),
-                          );
-                          commentController.clear();
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: $e')),
-                            );
-                          }
-                        }
-                      },
-                      icon: Icon(
-                        Icons.send,
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
+                            if (commentController.text.trim().isEmpty) {
+                              print('❌ Comment is empty');
+                              return;
+                            }
+
+                            try {
+                              print('🔵 Getting commentsService...');
+                              final commentsService = ref.read(commentsServiceProvider);
+
+                              print('🔵 Adding comment to postId: $postId');
+                              await commentsService.addComment(
+                                postId,
+                                commentController.text.trim(),
+                              );
+
+                              print('✅ Comment added successfully!');
+                              commentController.clear();
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Comment added!'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 1),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              print('❌ Error adding comment: $e');
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          icon: Icon(
+                            Icons.send,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -739,7 +769,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                             timestamp: timestamp,
                             likeCount: likeCount,
                             commentCount: commentCount,
-
                             onCommentTap: () {
                               _showCommentsBottomSheet(
                                 context,
