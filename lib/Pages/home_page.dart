@@ -65,7 +65,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   //post message with images
   Future<void> postMessage() async {
-    //check if there's text or images
+    // Check if there's text or images
     if (newPostController.text.isEmpty && selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -712,74 +712,95 @@ class _HomePageState extends ConsumerState<HomePage> {
                     final posts = snapshot.docs;
 
                     if (posts.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const SizedBox(height: 20),
-                            Text(
-                              "No posts yet",
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.inversePrimary,
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          // Refresh by invalidating the provider
+                          ref.invalidate(postsStreamProvider);
+                          await Future.delayed(const Duration(milliseconds: 500));
+                        },
+                        child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                        SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 20),
+                              Text(
+                                "No posts yet",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.inversePrimary,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Be the first to share something!",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Theme.of(context).colorScheme.secondary,
+                              const SizedBox(height: 8),
+                              Text(
+                                "Be the first to share something!",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).colorScheme.secondary,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      );
+                        ],
+                      ),
+                    );
                     }
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) {
-                        final post = posts[index];
-                        final postData = post.data() as Map<String, dynamic>;
+                    return RefreshIndicator(
+                    onRefresh: () async {
+                    // Refresh by invalidating the provider
+                    ref.invalidate(postsStreamProvider);
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    },
+                    child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: posts.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                    final post = posts[index];
+                    final postData = post.data() as Map<String, dynamic>;
 
-                        String postId = post.id;
-                        String message = postData['PostMessage'] ?? '';
-                        String username = postData['username'] ?? 'Anonymous';
-                        Timestamp? timestamp = postData['TimeStamp'];
-                        int likeCount = postData['likeCount'] ?? 0;
-                        int commentCount = postData['commentCount'] ?? 0;
+                    String postId = post.id;
+                    String message = postData['PostMessage'] ?? '';
+                    String username = postData['username'] ?? 'Anonymous';
+                    Timestamp? timestamp = postData['TimeStamp'];
+                    int likeCount = postData['likeCount'] ?? 0;
+                    int commentCount = postData['commentCount'] ?? 0;
 
-                        //get images and profile picture
-                        List<String>? imageUrls = postData['images'] != null
-                            ? List<String>.from(postData['images'])
-                            : null;
-                        String? profilePicture = postData['profilePicture'];
+                    //get images and profile picture
+                    List<String>? imageUrls = postData['images'] != null
+                    ? List<String>.from(postData['images'])
+                        : null;
+                    String? profilePicture = postData['profilePicture'];
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: MyListTile(
-                            postId: postId,
-                            title: message,
-                            username: username,
-                            profilePicture: profilePicture,
-                            imageUrls: imageUrls,
-                            timestamp: timestamp,
-                            likeCount: likeCount,
-                            commentCount: commentCount,
-                            onCommentTap: () {
-                              _showCommentsBottomSheet(
-                                context,
-                                postId,
-                                message,
-                                username,
-                              );
-                            },
-                          ),
-                        );
-                      },
+                    return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: MyListTile(
+                    postId: postId,
+                    title: message,
+                    username: username,
+                    profilePicture: profilePicture,
+                    imageUrls: imageUrls,
+                    timestamp: timestamp,
+                    likeCount: likeCount,
+                    commentCount: commentCount,
+                    onCommentTap: () {
+                    _showCommentsBottomSheet(
+                    context,
+                    postId,
+                    message,
+                    username,
+                    );
+                    },
+                    ),
+                    );
+                    },
                     );
                   },
                   loading: () => Center(
