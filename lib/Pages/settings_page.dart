@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/auth_provider.dart';
+import 'package:social_app/providers/theme_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -102,7 +103,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final currentUser = ref.read(authStateProvider).value;
     if (currentUser == null) return;
 
-    // Show warning dialog
+    //show warning dialog
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -114,7 +115,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ],
         ),
         content: const Text(
-          'This will permanently delete your account, all your posts, comments, and data. This action cannot be undone.\n\nAre you sure?',
+          'This will permanently delete your account, all your posts, comments, and data. This action cannot be undone.\n\nAre you absolutely sure?',
         ),
         actions: [
           TextButton(
@@ -330,6 +331,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
           const SizedBox(height: 24),
 
+          //appearance Section
+          _buildSectionHeader('Appearance'),
+          _buildThemeSelector(context, ref),
+
+          const SizedBox(height: 24),
+
           //account Section
           _buildSectionHeader('Account'),
           _buildSettingsTile(
@@ -445,6 +452,143 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
           const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector(BuildContext context, WidgetRef ref) {
+    final currentTheme = ref.watch(themeProvider);
+    final themeNotifier = ref.read(themeProvider.notifier);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                currentTheme == ThemeMode.dark
+                    ? Icons.dark_mode
+                    : currentTheme == ThemeMode.light
+                    ? Icons.light_mode
+                    : Icons.brightness_auto,
+                color: Theme.of(context).colorScheme.secondary,
+                size: 22,
+              ),
+            ),
+            title: const Text(
+              'Theme',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              currentTheme == ThemeMode.dark
+                  ? 'Dark'
+                  : currentTheme == ThemeMode.light
+                  ? 'Light'
+                  : 'System',
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.7),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildThemeOption(
+                    context,
+                    'Light',
+                    Icons.light_mode,
+                    ThemeMode.light,
+                    currentTheme == ThemeMode.light,
+                        () => themeNotifier.setTheme(ThemeMode.light),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildThemeOption(
+                    context,
+                    'Dark',
+                    Icons.dark_mode,
+                    ThemeMode.dark,
+                    currentTheme == ThemeMode.dark,
+                        () => themeNotifier.setTheme(ThemeMode.dark),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildThemeOption(
+                    context,
+                    'System',
+                    Icons.brightness_auto,
+                    ThemeMode.system,
+                    currentTheme == ThemeMode.system,
+                        () => themeNotifier.setTheme(ThemeMode.system),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeOption(
+      BuildContext context,
+      String label,
+      IconData icon,
+      ThemeMode mode,
+      bool isSelected,
+      VoidCallback onTap,
+      ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).colorScheme.secondary
+              : Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.secondary,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
