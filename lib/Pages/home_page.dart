@@ -747,6 +747,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             ],
                           ),
                         ),
+                        ),
                         ],
                       ),
                     );
@@ -801,6 +802,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                     );
                     },
+                    ),
                     );
                   },
                   loading: () => Center(
