@@ -1,139 +1,181 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:social_app/providers/auth_provider.dart';
 
-class MyDrawer extends StatelessWidget {
+class MyDrawer extends ConsumerWidget {
   const MyDrawer({super.key});
 
-  //logout user
-  void logout(BuildContext context) async {
-    try {
-      print('Attempting logout...');
-      await FirebaseAuth.instance.signOut();
-      await Future.delayed(Duration(milliseconds: 100));
-      print('Firebase signOut completed');
-
-      //navigate back to auth flow and clear all previous routes
-      if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/login_register_page',
-              (route) => false,
-        );
-      }
-    } catch (e) {
-      //handle any logout errors
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error logging out: $e')),
-        );
-      }
-    }
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(authStateProvider).value;
+    final userDataAsync = ref.watch(currentUserDataProvider);
+
     return Drawer(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          //top section with header and menu items
-          Column(
-            children: [
-              // Drawer header
-              DrawerHeader(
-                child: Icon(
-                  Icons.favorite,
-                  color: Theme.of(context).colorScheme.inversePrimary,
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              //home title
-              Padding(
-                padding: const EdgeInsets.only(left: 25.0),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.home,
-                    color: Theme.of(context).colorScheme.inversePrimary,
+          //header
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 50,
                   ),
-                  title: const Text("H O M E"),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
-
-              //profile title
-              Padding(
-                padding: const EdgeInsets.only(left: 25.0),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.person,
-                    color: Theme.of(context).colorScheme.inversePrimary,
+                  const SizedBox(height: 8),
+                  Text(
+                    'F E L L O',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  title: const Text("P R O F I L E"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/profile_page');
-                  },
-                ),
-              ),
-
-              //users title
-              Padding(
-                padding: const EdgeInsets.only(left: 25.0),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.group,
-                    color: Theme.of(context).colorScheme.inversePrimary,
+                  userDataAsync.when(
+                    data: (snapshot) {
+                      if (snapshot != null && snapshot.exists) {
+                        final userData = snapshot.data() as Map<String, dynamic>?;
+                        final username = userData?['username'] ?? 'User';
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '@$username',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                              fontSize: 14,
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
                   ),
-                  title: const Text("U S E R S"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/user_page');
-                  },
-                ),
+                ],
               ),
-            ],
-          ),
-
-          //bottom section with logout
-          Padding(
-            padding: const EdgeInsets.only(left: 25.0, bottom: 25),
-            child: ListTile(
-              leading: Icon(
-                Icons.logout,
-                color: Theme.of(context).colorScheme.inversePrimary,
-              ),
-              title: const Text("L O G O U T"),
-              onTap: () {
-                Navigator.pop(context);
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text("Logout"),
-                      content: const Text("Are you sure you want to logout?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text("Cancel"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            logout(context);
-                          },
-                          child: const Text("Logout"),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
             ),
           ),
+
+          //home
+          ListTile(
+            leading: Icon(
+              Icons.home,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            title: Text(
+              'H O M E',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/home_page');
+            },
+          ),
+
+          //profile
+          ListTile(
+            leading: Icon(
+              Icons.person,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            title: Text(
+              'P R O F I L E',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/profile_page');
+            },
+          ),
+
+          //search users
+          ListTile(
+            leading: Icon(
+              Icons.search,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            title: Text(
+              'S E A R C H',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/search');
+            },
+          ),
+
+          //users
+          ListTile(
+            leading: Icon(
+              Icons.group,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            title: Text(
+              'U S E R S',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/user_page');
+            },
+          ),
+
+          const Spacer(),
+
+          //settings
+          ListTile(
+            leading: Icon(
+              Icons.settings,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            title: Text(
+              'S E T T I N G S',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/settings');
+            },
+          ),
+
+          //logout
+          ListTile(
+            leading: Icon(
+              Icons.logout,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
+            title: Text(
+              'L O G O U T',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              // Sign out using Firebase Auth directly
+              await FirebaseAuth.instance.signOut();
+            },
+          ),
+
+          const SizedBox(height: 20),
         ],
       ),
     );
