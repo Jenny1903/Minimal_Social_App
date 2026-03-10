@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:social_app/providers/auth_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MyDrawer extends ConsumerWidget {
   const MyDrawer({super.key});
@@ -100,7 +100,7 @@ class MyDrawer extends ConsumerWidget {
             },
           ),
 
-          //search users
+          //search Users
           ListTile(
             leading: Icon(
               Icons.search,
@@ -170,7 +170,6 @@ class MyDrawer extends ConsumerWidget {
             ),
             onTap: () async {
               Navigator.pop(context);
-              // Sign out using Firebase Auth directly
               await FirebaseAuth.instance.signOut();
             },
           ),
