@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/auth_provider.dart';
 import 'package:social_app/providers/posts_provider.dart';
 import 'package:social_app/components/who_liked_sheet.dart';
+import 'package:social_app/components/clickable_username.dart';
+
 
 class MyListTile extends ConsumerStatefulWidget {
   final String postId;
@@ -322,13 +324,12 @@ class _MyListTileState extends ConsumerState<MyListTile> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '@${widget.username}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            color: Theme.of(context).colorScheme.inversePrimary,
-                          ),
+                        ClickableUsernameStyled(
+                          username: widget.username,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                          showUnderline: false,
                         ),
                         Text(
                           _formatTimestamp(widget.timestamp),
