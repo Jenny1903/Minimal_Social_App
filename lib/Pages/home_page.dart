@@ -11,6 +11,7 @@ import 'package:social_app/providers/posts_provider.dart';
 import 'package:social_app/services/image_service.dart';
 import 'package:social_app/services/comments_service.dart';
 import 'package:social_app/providers/auth_provider.dart';
+import 'package:social_app/components/clickable_username.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -467,13 +468,11 @@ class _HomePageState extends ConsumerState<HomePage> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
-                child: Text(
-                  (commentData['username'] ?? 'A')[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: ClickableUsername(
+                  username: commentData['username'] ?? 'Anonymous',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
               const SizedBox(width: 8),
