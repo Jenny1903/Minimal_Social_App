@@ -468,7 +468,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
-                child: ClickableUsername(
+                child: ClickableUsernameStyled(
                   username: commentData['username'] ?? 'Anonymous',
                   fontSize: 14,
                   fontWeight: FontWeight.bold,

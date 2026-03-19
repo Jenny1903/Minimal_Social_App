@@ -5,6 +5,8 @@ import 'package:social_app/providers/auth_provider.dart';
 import 'package:social_app/components/my_list_tile.dart';
 import 'package:social_app/services/comments_service.dart';
 
+import '../components/clickable_username.dart';
+
 //fetches any user's data by userId
 final userProfileProvider = StreamProvider.family<DocumentSnapshot, String>((ref, userId) {
   return FirebaseFirestore.instance
@@ -435,13 +437,11 @@ class UserProfilePage extends ConsumerWidget {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
-                child: Text(
-                  (commentData['username'] ?? 'A')[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: ClickableUsernameStyled(
+                  username: commentData['username'] ?? 'Anonymous',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
               const SizedBox(width: 8),
@@ -570,7 +570,6 @@ class UserProfilePage extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
-                // TODO: Navigate to settings
               },
             ),
         ],
