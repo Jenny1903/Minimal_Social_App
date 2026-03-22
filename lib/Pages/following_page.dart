@@ -1,14 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/Pages/user_profile_page.dart';
 
-//shows all users who follow this user
-class FollowersPage extends ConsumerWidget {
+//showing all users that this user follows
+//almost identical to FollowersPage, but uses 'following' array instead
+class FollowingPage extends ConsumerWidget {
   final String userId;
   final String username;
 
-  const FollowersPage({
+  const FollowingPage({
     super.key,
     required this.userId,
     required this.username,
@@ -19,13 +20,12 @@ class FollowersPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
-        title: Text('$username\'s Followers'),
+        title: Text('$username Following'),
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 0,
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        //listen to the user document to get followers list
         stream: FirebaseFirestore.instance
             .collection('Users')
             .doc(userId)
@@ -39,13 +39,13 @@ class FollowersPage extends ConsumerWidget {
             return const Center(child: Text('User not found'));
           }
 
-          //get the followers array from the user document
+          //get the following array instead of followers
           final userData = snapshot.data!.data() as Map<String, dynamic>;
-          final followerIds = List<String>.from(userData['followers'] ?? []);
+          final followingIds = List<String>.from(userData['following'] ?? []);
 
-          print('Found ${followerIds.length} followers for $username');
+          print('👥 User $username is following ${followingIds.length} people');
 
-          if (followerIds.isEmpty) {
+          if (followingIds.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -57,7 +57,7 @@ class FollowersPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No followers yet',
+                    'Not following anyone yet',
                     style: TextStyle(
                       fontSize: 18,
                       color: Theme.of(context).colorScheme.inversePrimary,
@@ -68,17 +68,15 @@ class FollowersPage extends ConsumerWidget {
             );
           }
 
-          //fetch full user data for each follower
-          //this is a FutureBuilder because we need to fetch multiple users
           return FutureBuilder<List<DocumentSnapshot>>(
-            future: _fetchUsersByIds(followerIds),
+            future: _fetchUsersByIds(followingIds),
             builder: (context, usersSnapshot) {
               if (usersSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
               if (!usersSnapshot.hasData || usersSnapshot.data!.isEmpty) {
-                return const Center(child: Text('No followers found'));
+                return const Center(child: Text('No users found'));
               }
 
               final users = usersSnapshot.data!;
@@ -110,18 +108,9 @@ class FollowersPage extends ConsumerWidget {
     );
   }
 
-  //fetch multiple users by their IDs
-
-  //takes: List of user IDs
-  //returns: List of user documents
   Future<List<DocumentSnapshot>> _fetchUsersByIds(List<String> userIds) async {
-    print('Fetching ${userIds.length} users...');
-
-
-    //need to batch the requests if there are more than 10
     final List<DocumentSnapshot> users = [];
 
-    //split into batches of 10
     for (int i = 0; i < userIds.length; i += 10) {
       final batch = userIds.skip(i).take(10).toList();
 
@@ -133,12 +122,9 @@ class FollowersPage extends ConsumerWidget {
       users.addAll(snapshot.docs);
     }
 
-    print('Fetched ${users.length} users');
     return users;
   }
 
-  //build a user tile widget
-  //this is the item shown for each user in the list
   Widget _buildUserTile(
       BuildContext context, {
         required String userId,
@@ -149,9 +135,7 @@ class FollowersPage extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        //when tapped, navigate to their profile
         onTap: () {
-          print('Tapped on user: $username');
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -171,7 +155,6 @@ class FollowersPage extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              //profile picture
               CircleAvatar(
                 radius: 28,
                 backgroundColor: Theme.of(context).colorScheme.secondary,
@@ -192,7 +175,6 @@ class FollowersPage extends ConsumerWidget {
 
               const SizedBox(width: 12),
 
-              //user info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,7 +203,6 @@ class FollowersPage extends ConsumerWidget {
                 ),
               ),
 
-              //arrow icon
               Icon(
                 Icons.chevron_right,
                 color: Theme.of(context).colorScheme.secondary,
