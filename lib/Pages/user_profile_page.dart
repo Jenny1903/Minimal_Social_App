@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:social_app/providers/auth_provider.dart';
 import 'package:social_app/components/my_list_tile.dart';
 import 'package:social_app/services/comments_service.dart';
-
 import '../components/clickable_username.dart';
+import 'package:social_app/Pages/followers_page.dart';
+import 'package:social_app/Pages/following_page.dart';
 
 //fetches any user's data by userId
 final userProfileProvider = StreamProvider.family<DocumentSnapshot, String>((ref, userId) {
@@ -840,28 +841,28 @@ class UserProfilePage extends ConsumerWidget {
             data: (stats) => Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatItem(context, stats['posts'].toString(), 'Posts'),
-                _buildStatItem(context, stats['likes'].toString(), 'Likes'),
-                _buildStatItem(context, stats['followers'].toString(), 'Followers'),
-                _buildStatItem(context, stats['following'].toString(), 'Following'),
+                _buildStatItem(context, userId, username, stats['posts'].toString(), 'Posts'),
+                _buildStatItem(context, userId, username, stats['likes'].toString(), 'Likes'),
+                _buildStatItem(context, userId, username, stats['followers'].toString(), 'Followers'),
+                _buildStatItem(context, userId, username, stats['following'].toString(), 'Following'),
               ],
             ),
             loading: () => Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatItem(context, '...', 'Posts'),
-                _buildStatItem(context, '...', 'Likes'),
-                _buildStatItem(context, '...', 'Followers'),
-                _buildStatItem(context, '...', 'Following'),
+                _buildStatItem(context, userId, username, '...', 'Posts'),
+                _buildStatItem(context, userId, username, '...', 'Likes'),
+                _buildStatItem(context, userId, username, '...', 'Followers'),
+                _buildStatItem(context, userId, username, '...', 'Following'),
               ],
             ),
             error: (_, __) => Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatItem(context, '0', 'Posts'),
-                _buildStatItem(context, '0', 'Likes'),
-                _buildStatItem(context, '0', 'Followers'),
-                _buildStatItem(context, '0', 'Following'),
+                _buildStatItem(context, userId, username, '0', 'Posts'),
+                _buildStatItem(context, userId, username, '0', 'Likes'),
+                _buildStatItem(context, userId, username, '0', 'Followers'),
+                _buildStatItem(context, userId, username, '0', 'Following'),  
               ],
             ),
           ),
@@ -904,26 +905,72 @@ class UserProfilePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, String count, String label) {
-    return Column(
-      children: [
-        Text(
-          count,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.inversePrimary,
+  Widget _buildStatItem(
+      BuildContext context,
+      String userId,
+      String username,
+      String count,
+      String label,
+      ) {
+
+    //determine if this stat should be clickable
+    final isClickable = label == 'Followers' || label == 'Following';
+
+    return GestureDetector(
+      //only navigate if it's followers or following
+      onTap: isClickable ? () {
+        print('Tapped on $label');
+
+        if (label == 'Followers') {
+          //open followers list
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FollowersPage(
+                userId: userId,
+                username: username,
+              ),
+            ),
+          );
+        } else if (label == 'Following') {
+          //open following list
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FollowingPage(
+                userId: userId,
+                username: username,
+              ),
+            ),
+          );
+        }
+      } : null,
+      child: Column(
+        children: [
+          Text(
+            count,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.inversePrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Theme.of(context).colorScheme.secondary,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: isClickable
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.secondary.withOpacity(0.7),
+              //underline to show it's clickable
+              decoration: isClickable
+                  ? TextDecoration.underline
+                  : null,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
